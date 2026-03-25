@@ -66,6 +66,11 @@ const medicationStatusMap: Record<MedicationStatus, MedStatusConfig> = {
     tailwindBg: 'bg-[#4FB6B2]/15',
     tailwindText: 'text-[#4FB6B2]',
   },
+  ongoing: {
+    label: 'Ongoing',
+    tailwindBg: 'bg-[#4FB6B2]/15',
+    tailwindText: 'text-[#4FB6B2]',
+  },
   completed: {
     label: 'Completed',
     tailwindBg: 'bg-[#6BCB77]/15',
