@@ -1,0 +1,951 @@
+# Pet Health Tracker — Master Prompt
+# For: Google Antigravity / Claude Opus 4.6 (Extended Thinking)
+#
+# HOW TO USE THIS PROMPT:
+# Paste the entire contents of this file as your first message.
+# Claude Opus will read everything, think deeply, then begin building.
+
+---
+
+You are a senior frontend engineer building a production-grade React web application.
+
+Read every word of this prompt before writing a single line of code. Use your extended thinking capability to plan the full architecture, identify dependencies, and determine the correct build order. Only begin coding after that planning is complete.
+
+---
+
+## PROJECT OVERVIEW
+
+**App name**: PawHealth (or your chosen brand name)
+
+A **responsive web application** for pet health management. We have an approved mobile design from Stitch MCP. Build mobile-first to match that design, then scale up gracefully to tablet and desktop.
+
+**What the app does**: Pet owners manage multiple pets, tracking vaccinations, medications, deworming, vet visits, weight, and documents. Dashboard gives a health overview per pet.
+
+---
+
+## TECH STACK — USE EXACTLY THIS, NO SUBSTITUTIONS
+
+```
+React 18 + TypeScript (strict mode)
+Tailwind CSS v3
+React Router v6
+Zustand (global state)
+TanStack Query / React Query v5 (server state)
+React Hook Form + Zod (forms + validation)
+Framer Motion (animations)
+Recharts (weight graph)
+date-fns (date utilities)
+Lucide React (icons)
+Axios (HTTP client)
+react-hot-toast (toast notifications)
+Vite (build tool)
+```
+
+**Google Font**: DM Sans — import in `index.html`
+
+---
+
+## DESIGN SYSTEM
+
+These are the exact approved colors. Configure in `tailwind.config.ts` AND as CSS variables.
+
+```
+--color-primary:        #4FB6B2   (teal — buttons, links, active states)
+--color-primary-light:  #CFEDEA   (teal tint — highlights, chips)
+--color-bg:             #F7FAFA   (page background)
+--color-card:           #FFFFFF   (card/surface background)
+--color-text:           #2F3A3A   (primary text)
+--color-text-secondary: #7A8A8A   (captions, labels)
+--color-divider:        #E6EEEE   (borders, separators)
+--color-success:        #6BCB77   (completed status)
+--color-warning:        #F2B544   (upcoming status)
+--color-error:          #E76F51   (overdue status)
+```
+
+### Status → Color Mapping (apply everywhere consistently)
+```
+'completed'  →  #6BCB77
+'upcoming'   →  #F2B544
+'overdue'    →  #E76F51
+```
+
+### Visual Rules
+- Background: `#F7FAFA` on all pages
+- Cards: `bg-white rounded-xl` with `shadow-sm` (subtle: `0 1px 4px rgba(47,58,58,0.06)`)
+- Inputs: `rounded-lg border border-[#E6EEEE] focus:ring-2 focus:ring-[#4FB6B2]`
+- Buttons: `rounded-lg` — primary = `bg-[#4FB6B2] text-white`, secondary = `border border-[#4FB6B2] text-[#4FB6B2]`
+- Typography: DM Sans throughout — `text-[#2F3A3A]` primary, `text-[#7A8A8A]` secondary
+- NO heavy shadows, NO purple gradients, NO cartoon elements
+
+### Responsive Layout
+```
+Mobile  (< 768px):    Single column, bottom navigation (4 tabs)
+Tablet  (768–1023px): 2-column grid, collapsible sidebar or bottom nav
+Desktop (≥ 1024px):   Fixed 240px left sidebar + scrollable main content
+```
+
+---
+
+## BACKEND API — REAL ENDPOINTS
+
+### Base URL
+```
+http://localhost:5001/api/v1
+```
+Read from `import.meta.env.VITE_API_BASE_URL`
+
+---
+
+### 🔐 AUTHENTICATION — DUAL TOKEN SYSTEM (CRITICAL)
+
+This is a security-critical implementation. Follow it precisely.
+
+#### Token Storage (Web Rules)
+```
+accessToken  →  Zustand store ONLY. NEVER localStorage, NEVER sessionStorage.
+refreshToken →  HttpOnly cookie, set automatically by server. NEVER access it in JS.
+```
+
+#### Complete Auth Flow
+```
+1. User logs in → POST /auth/login
+2. Response includes accessToken + user
+3. Store ONLY accessToken in Zustand authStore
+4. Every API request → Authorization: Bearer <accessToken>
+5. If 401 response comes back, check response.data.code:
+   - "TOKEN_EXPIRED"       → POST /auth/refresh-token (no body, cookie auto-sent)
+                              → get new accessToken → store in Zustand → retry request
+   - Any other code        → clear Zustand → navigate('/login')
+6. Logout → POST /auth/logout → clear Zustand → navigate('/login')
+```
+
+#### Axios Interceptor Implementation
+Build a proper Axios interceptor that:
+1. Injects `Authorization: Bearer <accessToken>` on every request
+2. On 401 response, reads `response.data.code`
+3. If `TOKEN_EXPIRED`: calls refresh, updates Zustand, retries the original request exactly once
+4. If any other error code: calls `authStore.clearAuth()` and navigates to login
+5. Uses a queue to prevent multiple simultaneous refresh calls during parallel 401s
+
+---
+
+### ✅ AUTH ENDPOINTS — ALL BUILT
+
+#### POST `/auth/signup`
+```json
+Body:    { "name": "John", "email": "john@example.com", "password": "Test1234" }
+Success: { "success": true, "message": "OTP sent to email for verification",
+           "email": "john@example.com", "otpExpiresAt": 600 }
+Errors:  USER_EXISTS | PASSWORD_REQUIRED | WEAK_PASSWORD
+```
+Password rules: min 8 chars, must contain letters AND numbers.
+`otpExpiresAt` is seconds until OTP expires (600 = 10 min).
+
+#### POST `/auth/verify-email`
+```json
+Body:    { "email": "john@example.com", "otp": "482910" }
+Success: { "success": true, "message": "Email verified successfully, you can now login" }
+Errors:  EMAIL_NOT_REGISTERED | ALREADY_VERIFIED | OTP_EXPIRED | INVALID_OTP
+```
+
+#### POST `/auth/resend-otp`
+```json
+Body:    { "email": "john@example.com" }
+Success: { "success": true, "email": "john@example.com", "otpExpiresAt": 600 }
+Errors:  EMAIL_NOT_REGISTERED | ALREADY_VERIFIED | OTP_RECENTLY_SENT (rate limited: 1/min)
+```
+Show countdown timer for the 1-minute cooldown in the UI.
+
+#### POST `/auth/google`
+```json
+Body:    { "name": "John Doe", "email": "john@gmail.com",
+           "email_verified": true, "picture": "https://..." }
+Success: { "success": true, "accessToken": "...", "refreshToken": "...",
+           "user": { "id": "...", "name": "...", "email": "...", "profilePicture": "..." } }
+```
+
+#### POST `/auth/login`
+```json
+Body:    { "email": "john@example.com", "password": "123456" }
+Success: { "success": true, "accessToken": "...", "refreshToken": "...",
+           "user": { "id": "...", "name": "...", "email": "..." } }
+```
+
+#### POST `/auth/refresh-token`
+```json
+Body:    none (browser sends HttpOnly cookie automatically)
+Success: { "success": true, "accessToken": "...", "refreshToken": "..." }
+```
+Each refresh token can only be used ONCE. If a used token is detected, ALL sessions revoked immediately.
+
+#### POST `/auth/logout`
+```json
+Header: Authorization: Bearer <accessToken>
+Body:   none (cookie sent automatically)
+```
+
+#### POST `/auth/logout-all`
+```json
+Header: Authorization: Bearer <accessToken>
+```
+
+#### POST `/auth/change-password`
+```json
+Body: { "currentPassword": "...", "newPassword": "..." }
+```
+
+#### POST `/auth/forgot-password`
+```json
+Body:    { "email": "john@example.com" }
+Success: { "success": true, "email": "...", "expiresIn": 600 }
+```
+Always returns success even if email not found (prevents email enumeration).
+
+#### POST `/auth/reset-password`
+```json
+Body: { "token": "<token_from_email_link>", "newPassword": "NewPass1234" }
+Errors: WEAK_PASSWORD | INVALID_OR_EXPIRED_TOKEN
+```
+All sessions are revoked after successful reset.
+
+#### DELETE `/auth/delete-account`
+```json
+Header: Authorization: Bearer <accessToken>
+```
+
+---
+
+### ✅ PET ENDPOINTS — ALL BUILT
+
+#### POST `/pets` — Create pet
+```json
+Body: {
+  "name": "Buddy", "type": "Dog", "breed": "Labrador",
+  "gender": "Male", "dateOfBirth": "2022-01-15",
+  "initialWeight": 10, "photo": "url_or_base64", "microchipId": "123ABC"
+}
+Response: { "success": true, "data": { "_id": "...", ...petFields } }
+```
+
+#### GET `/pets` — Get all pets (paginated)
+```json
+Query: ?page=1&limit=10
+Response: {
+  "success": true, "count": 2,
+  "data": [ { "_id": "...", "name": "Buddy", ... } ],
+  "page": 1, "pages": 5, "total": 42
+}
+```
+
+#### GET `/pets/:id` — Single pet
+```json
+Response: { "success": true, "data": { "_id": "...", ...petFields } }
+```
+
+#### PUT `/pets/:id` — Update pet
+```json
+Body: any pet fields to update
+```
+
+#### DELETE `/pets/:id` — Delete pet
+```json
+Response: { "success": true, "message": "Pet deleted successfully" }
+```
+
+---
+
+### 🔄 VACCINATION ENDPOINTS — BUILT (team still actively working on this module)
+
+#### POST `/vaccinations/pet/:petId/auto-generate`
+Auto-generates schedule based on pet type and age from backend vaccine templates.
+```json
+Response: { "success": true, "data": [ { "_id": "...", "vaccineName": "Rabies",
+  "nextDueDate": "...", "status": "upcoming", ... } ] }
+```
+
+#### POST `/vaccinations` — Manual entry
+```json
+Body: {
+  "petId": "...", "vaccineName": "Rabies",
+  "dateAdministered": "2024-04-01", "nextDueDate": "2025-04-01",
+  "veterinarianName": "Dr. Smith", "clinicName": "Happy Pets Clinic",
+  "notes": "Annual booster",
+  "documents": [{ "url": "https://...", "type": "image" }]
+}
+Response: { "success": true, "data": { "_id": "...", "status": "completed", ... } }
+```
+
+#### GET `/vaccinations/pet/:petId` — All vaccinations
+#### GET `/vaccinations/pet/:petId/upcoming` — Upcoming only
+#### GET `/vaccinations/pet/:petId/overdue` — Overdue only
+#### GET `/vaccinations/:id` — Single record
+#### PUT `/vaccinations/:id` — Update record
+#### DELETE `/vaccinations/:id` — Delete record
+#### PATCH `/vaccinations/:id/complete` — Mark as completed
+```json
+Response: { "success": true, "data": { "status": "completed", ... } }
+```
+
+---
+
+### ⏳ NOT YET BUILT (Medications, Deworming, Vet Visits, Weight, Documents)
+
+For these modules:
+1. Build the **complete UI** as if the API exists
+2. Create **proper service stub files** with the expected function signatures
+3. Use **realistic mock data** so the UI is fully functional
+4. Structure code so swapping mock → real API is a one-line change per function
+
+---
+
+## TYPESCRIPT INTERFACES
+
+Define all of these in `src/types/index.ts`:
+
+```typescript
+export interface User {
+  id: string;
+  name: string;
+  email: string;
+  profilePicture?: string;
+}
+
+export interface Pet {
+  _id: string;
+  owner: string;
+  name: string;
+  type: 'Dog' | 'Cat' | 'Other';
+  breed: string;
+  gender: 'Male' | 'Female';
+  dateOfBirth: string;
+  initialWeight: number;
+  photo?: string;
+  microchipId?: string;
+}
+
+export type VaccinationStatus = 'completed' | 'upcoming' | 'overdue';
+
+export interface VaccinationDocument {
+  url: string;
+  type: 'image' | 'pdf';
+  uploadedAt: string;
+}
+
+export interface Vaccination {
+  _id: string;
+  pet: string;
+  vaccineTemplate?: string;
+  vaccineName: string;
+  dateAdministered?: string;
+  nextDueDate: string;
+  veterinarianName?: string;
+  clinicName?: string;
+  notes?: string;
+  documents?: VaccinationDocument[];
+  createdBy: string;
+  status: VaccinationStatus;
+}
+
+export interface Medication {
+  _id: string;
+  pet: string;
+  medicineName: string;
+  dosage: string;
+  frequency: 'once-daily' | 'twice-daily' | 'three-times' | 'custom';
+  startDate: string;
+  endDate: string;
+  notes?: string;
+  status: 'active' | 'completed' | 'stopped';
+}
+
+export interface DewormingRecord {
+  _id: string;
+  pet: string;
+  frequency: 'monthly' | 'bi-monthly' | 'quarterly' | 'custom';
+  lastDate: string;
+  nextDueDate: string;
+  notes?: string;
+  status: 'completed' | 'upcoming' | 'overdue';
+}
+
+export interface VetVisit {
+  _id: string;
+  pet: string;
+  visitDate: string;
+  clinicName: string;
+  veterinarianName: string;
+  diagnosis: string;
+  treatment: string;
+  cost?: number;
+  notes?: string;
+  documents?: VaccinationDocument[];
+}
+
+export interface WeightEntry {
+  _id: string;
+  pet: string;
+  date: string;
+  weight: number;
+  unit: 'kg' | 'lbs';
+}
+
+export interface PaginatedResponse<T> {
+  success: boolean;
+  count: number;
+  data: T[];
+  page: number;
+  pages: number;
+  total: number;
+}
+
+export interface ApiError {
+  success: false;
+  code: string;
+  message: string;
+}
+```
+
+---
+
+## MOCK DATA (src/data/mockData.ts)
+
+Use this for all unbuilt API modules:
+
+```typescript
+import type { Medication, DewormingRecord, VetVisit, WeightEntry } from '@/types';
+
+export const mockMedications: Medication[] = [
+  {
+    _id: 'med-1',
+    pet: 'pet-1',
+    medicineName: 'Apoquel (Oclacitinib)',
+    dosage: '16mg',
+    frequency: 'once-daily',
+    startDate: '2025-02-01',
+    endDate: '2025-04-01',
+    notes: 'For seasonal allergies — take with food',
+    status: 'active',
+  },
+  {
+    _id: 'med-2',
+    pet: 'pet-1',
+    medicineName: 'Omega-3 Fish Oil',
+    dosage: '1000mg',
+    frequency: 'once-daily',
+    startDate: '2025-01-01',
+    endDate: '2025-06-30',
+    status: 'active',
+  },
+  {
+    _id: 'med-3',
+    pet: 'pet-1',
+    medicineName: 'Amoxicillin',
+    dosage: '250mg',
+    frequency: 'twice-daily',
+    startDate: '2024-11-10',
+    endDate: '2024-11-20',
+    status: 'completed',
+  },
+];
+
+export const mockDeworming: DewormingRecord[] = [
+  {
+    _id: 'dew-1',
+    pet: 'pet-1',
+    frequency: 'quarterly',
+    lastDate: '2025-01-15',
+    nextDueDate: '2025-04-15',
+    status: 'upcoming',
+  },
+];
+
+export const mockVetVisits: VetVisit[] = [
+  {
+    _id: 'vet-1',
+    pet: 'pet-1',
+    visitDate: '2025-02-14',
+    clinicName: 'PetCare Clinic, Pune',
+    veterinarianName: 'Dr. Priya Sharma',
+    diagnosis: 'Seasonal allergies with mild skin inflammation',
+    treatment: 'Prescribed Apoquel 16mg. Recommended omega-3 supplementation. Dietary review advised.',
+    cost: 1200,
+    notes: 'Follow up in 6 weeks if symptoms persist. Keep away from grass during spring.',
+  },
+  {
+    _id: 'vet-2',
+    pet: 'pet-1',
+    visitDate: '2024-10-05',
+    clinicName: 'Paws & Claws Vet Centre, Pune',
+    veterinarianName: 'Dr. Ankit Mehta',
+    diagnosis: 'Routine annual checkup — healthy',
+    treatment: 'Full physical examination. Blood work normal. Updated vaccination records.',
+    cost: 800,
+  },
+];
+
+export const mockWeightEntries: WeightEntry[] = [
+  { _id: 'w-1', pet: 'pet-1', date: '2024-10-05', weight: 26.8, unit: 'kg' },
+  { _id: 'w-2', pet: 'pet-1', date: '2024-11-12', weight: 27.2, unit: 'kg' },
+  { _id: 'w-3', pet: 'pet-1', date: '2024-12-08', weight: 27.6, unit: 'kg' },
+  { _id: 'w-4', pet: 'pet-1', date: '2025-01-05', weight: 27.9, unit: 'kg' },
+  { _id: 'w-5', pet: 'pet-1', date: '2025-01-28', weight: 28.0, unit: 'kg' },
+  { _id: 'w-6', pet: 'pet-1', date: '2025-02-18', weight: 28.3, unit: 'kg' },
+  { _id: 'w-7', pet: 'pet-1', date: '2025-03-10', weight: 28.5, unit: 'kg' },
+];
+```
+
+---
+
+## PROJECT STRUCTURE
+
+```
+pet-health-tracker/
+├── public/
+├── src/
+│   ├── components/
+│   │   ├── ui/
+│   │   │   ├── Button.tsx
+│   │   │   ├── Card.tsx
+│   │   │   ├── Input.tsx
+│   │   │   ├── Select.tsx
+│   │   │   ├── Badge.tsx
+│   │   │   ├── StatusBadge.tsx
+│   │   │   ├── Modal.tsx
+│   │   │   ├── ConfirmDialog.tsx
+│   │   │   ├── Avatar.tsx
+│   │   │   ├── SkeletonLoader.tsx
+│   │   │   ├── EmptyState.tsx
+│   │   │   └── FileUpload.tsx
+│   │   ├── layout/
+│   │   │   ├── AppLayout.tsx
+│   │   │   ├── Sidebar.tsx
+│   │   │   └── BottomNav.tsx
+│   │   ├── pets/
+│   │   ├── vaccinations/
+│   │   ├── medications/
+│   │   ├── deworming/
+│   │   ├── vet-visits/
+│   │   └── weight/
+│   ├── pages/
+│   │   ├── Landing.tsx
+│   │   ├── auth/
+│   │   │   ├── Login.tsx
+│   │   │   ├── Signup.tsx
+│   │   │   ├── VerifyOtp.tsx
+│   │   │   ├── ForgotPassword.tsx
+│   │   │   └── ResetPassword.tsx
+│   │   ├── Dashboard.tsx
+│   │   ├── PetList.tsx
+│   │   ├── AddPet.tsx
+│   │   ├── PetProfile.tsx
+│   │   ├── VaccinationTracker.tsx
+│   │   ├── MedicationTracker.tsx
+│   │   ├── DewormingTracker.tsx
+│   │   ├── VetVisitHistory.tsx
+│   │   ├── WeightTracking.tsx
+│   │   ├── Documents.tsx
+│   │   └── Settings.tsx
+│   ├── store/
+│   │   ├── authStore.ts         ← accessToken + user (in-memory)
+│   │   └── petStore.ts          ← active pet ID
+│   ├── hooks/
+│   │   ├── usePets.ts
+│   │   ├── useVaccinations.ts
+│   │   ├── useMedications.ts
+│   │   ├── useDeworming.ts
+│   │   ├── useVetVisits.ts
+│   │   └── useWeight.ts
+│   ├── services/
+│   │   ├── api.ts               ← Axios + interceptors + token refresh
+│   │   ├── auth.service.ts
+│   │   ├── pets.service.ts
+│   │   ├── vaccinations.service.ts
+│   │   ├── medications.service.ts  ← stub, returns mock data
+│   │   ├── deworming.service.ts    ← stub, returns mock data
+│   │   ├── vetVisits.service.ts    ← stub, returns mock data
+│   │   └── weight.service.ts       ← stub, returns mock data
+│   ├── types/
+│   │   └── index.ts
+│   ├── data/
+│   │   └── mockData.ts
+│   ├── utils/
+│   │   ├── dateUtils.ts         ← date-fns helpers
+│   │   └── statusUtils.ts       ← status → color/label mapping
+│   └── constants/
+│       └── routes.ts
+├── CLAUDE.md
+├── .claude/
+│   └── agents/
+│       ├── ui-builder.md
+│       ├── api-integrator.md
+│       └── design-system.md
+├── tailwind.config.ts
+├── tsconfig.json
+└── vite.config.ts
+```
+
+---
+
+## PAGES — DETAILED SPECS
+
+### Landing Page `/`
+- Hero: logo, tagline ("Your pet's health, organised"), CTA buttons
+- 3–4 feature cards with Lucide icons (teal-tinted)
+- Navigation bar with Login + Get Started
+- Clean, minimal, teal accent on white/off-white
+
+### Auth Flow
+**`/signup`**:
+- Name, email, password, confirm password fields with Zod validation
+- "Sign up with Google" button
+- On success → navigate to `/verify-otp?email=...`
+
+**`/verify-otp`**:
+- 6-digit OTP input (auto-advance between boxes)
+- Countdown timer showing OTP expiry (10 min countdown)
+- "Resend OTP" button — disabled until cooldown expires (1 min), shows countdown
+- Clear error messages for INVALID_OTP, OTP_EXPIRED
+
+**`/login`**:
+- Email + password, "Forgot password?" link
+- "Sign in with Google"
+- Show password toggle
+
+**`/forgot-password`**: Email input → shows success message regardless of email existence
+
+**`/reset-password`**: New password + confirm (token from URL query param)
+
+### Dashboard `/dashboard` — MOST IMPORTANT PAGE
+Build this with full detail. Two column on desktop, single on mobile.
+
+Top to bottom:
+1. **Pet header card** — avatar, name, breed, age, "Switch pet" dropdown if multiple pets
+2. **Overdue alerts** — red-bordered card, only shown if overdue items exist; lists them with a "View" link
+3. **This week** — amber cards for items due in 7 days
+4. **Active medications** — ongoing medications with days remaining
+5. **Next deworming** — single stat card (next due date + countdown)
+6. **Recent vet visit** — last visit summary (date, vet name, clinic, diagnosis preview)
+7. **Latest weight** — large number, unit, trend arrow + % change vs previous entry
+8. **Quick actions** — 4 icon buttons: Add Vaccination, Log Medication, Record Weight, Add Vet Visit
+
+Every section card:
+- Section icon + title
+- Status badges (use `StatusBadge`)
+- "View All →" link
+- Empty state if no data for that section
+
+### Pet List `/pets`
+- 2-col grid on tablet+, 1-col mobile
+- PetCard: avatar/photo, name, breed, age, health status dot
+- "+ Add Pet" button top-right
+- Pagination if > 10 pets
+
+### Add/Edit Pet `/pets/new` and `/pets/:id/edit`
+- Pet name
+- Type: Dog / Cat / Other (segmented button group)
+- Breed (text input with common breed suggestions)
+- Gender: Male / Female (toggle)
+- Date of birth (date picker)
+- Weight (number + kg/lbs unit toggle)
+- Photo upload (drag and drop, preview on upload)
+- Microchip ID (optional, labelled as such)
+- Full Zod validation, inline errors
+
+### Pet Profile `/pets/:id`
+- Large header (photo, name, breed, age, gender, DOB)
+- Quick stats: last vaccination, last deworming, active meds count
+- Tab bar: Overview | Vaccinations | Medications | Deworming | Vet Visits | Weight
+- Overview shows mini-summary cards per module
+
+### Vaccination Tracker `/pets/:id/vaccinations`
+- "Auto-generate Schedule" button (calls `/vaccinations/pet/:petId/auto-generate`)
+- "Add Vaccination" button
+- Filter tabs: All | Overdue | Upcoming | Completed
+- Overdue items pinned at top with error colour treatment
+- VaccinationCard: vaccine name, next due date, status badge, vet/clinic, actions (Mark Complete, Edit, Delete)
+- Mark Complete uses PATCH `/:id/complete` with optimistic update
+
+### Medication Tracker `/pets/:id/medications` (mock data)
+- Tabs: Active | Completed
+- MedicationCard: name, dosage, frequency, start/end dates
+- Animated progress bar showing treatment progress (Framer Motion)
+- "Add Medication" button
+- Mark dose taken (mock)
+
+### Deworming Tracker `/pets/:id/deworming` (mock data)
+- Current schedule card (frequency + next due date + status)
+- Status indicator: "Due in X days" or "Overdue by X days"
+- History list
+- "Mark as Done" and "Set Schedule" buttons
+
+### Vet Visit History `/pets/:id/vet-visits` (mock data)
+- Chronological list, newest first
+- VetVisitCard: date, clinic, vet, diagnosis summary, cost if entered
+- Year filter dropdown
+- Expandable card for full details
+- "Add Visit" button
+
+### Weight Tracking `/pets/:id/weight` (mock data)
+- **Recharts LineChart** — teal line, smooth curve, white card background
+  - X axis: dates, Y axis: weight in kg/lbs
+  - Tooltips on hover
+  - Toggle: 1M | 3M | 6M | 1Y
+- Current weight stat (large number, unit, trend ↑↓→)
+- % change vs previous entry
+- List of weight entries below graph
+- FAB "Add Weight" button (floating, teal, bottom-right on mobile)
+
+### Documents `/documents` (mock data)
+- Grid of document cards
+- Card: file name, upload date, pet name, type badge (PDF/Image)
+- Drag and drop upload modal
+- Filter by pet dropdown
+- Image preview modal, PDF download link
+
+### Settings `/settings`
+Sections:
+- **Account**: display name, email, "Change Password" → modal
+- **Preferences**: weight unit (kg/lbs), notification toggles per category
+- **Appearance**: dark mode toggle (implement properly with `dark:` Tailwind classes)
+- **Data**: "Export as PDF" button (stub)
+- **Danger Zone**: "Delete Account" (red button → ConfirmDialog → calls DELETE /auth/delete-account)
+
+---
+
+## KEY IMPLEMENTATION DETAILS
+
+### Axios Instance (`src/services/api.ts`)
+```typescript
+import axios from 'axios';
+import { useAuthStore } from '@/store/authStore';
+
+let isRefreshing = false;
+let failedQueue: Array<{ resolve: (value: string) => void; reject: (error: unknown) => void }> = [];
+
+const processQueue = (error: unknown, token: string | null = null) => {
+  failedQueue.forEach(prom => {
+    if (error) prom.reject(error);
+    else prom.resolve(token!);
+  });
+  failedQueue = [];
+};
+
+const api = axios.create({
+  baseURL: import.meta.env.VITE_API_BASE_URL,
+  withCredentials: true, // CRITICAL: sends HttpOnly cookie on refresh calls
+});
+
+api.interceptors.request.use((config) => {
+  const token = useAuthStore.getState().accessToken;
+  if (token) config.headers.Authorization = `Bearer ${token}`;
+  return config;
+});
+
+api.interceptors.response.use(
+  (response) => response,
+  async (error) => {
+    const originalRequest = error.config;
+    const code = error.response?.data?.code;
+
+    if (error.response?.status === 401 && code === 'TOKEN_EXPIRED' && !originalRequest._retry) {
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          failedQueue.push({ resolve, reject });
+        }).then(token => {
+          originalRequest.headers.Authorization = `Bearer ${token}`;
+          return api(originalRequest);
+        });
+      }
+
+      originalRequest._retry = true;
+      isRefreshing = true;
+
+      try {
+        const res = await api.post('/auth/refresh-token'); // cookie sent automatically
+        const newToken = res.data.accessToken;
+        useAuthStore.getState().setAccessToken(newToken);
+        processQueue(null, newToken);
+        originalRequest.headers.Authorization = `Bearer ${newToken}`;
+        return api(originalRequest);
+      } catch (refreshError) {
+        processQueue(refreshError);
+        useAuthStore.getState().clearAuth();
+        window.location.href = '/login';
+        return Promise.reject(refreshError);
+      } finally {
+        isRefreshing = false;
+      }
+    }
+
+    if (error.response?.status === 401) {
+      useAuthStore.getState().clearAuth();
+      window.location.href = '/login';
+    }
+
+    return Promise.reject(error);
+  }
+);
+
+export default api;
+```
+
+### Auth Store (`src/store/authStore.ts`)
+```typescript
+import { create } from 'zustand';
+import type { User } from '@/types';
+
+interface AuthStore {
+  accessToken: string | null;
+  user: User | null;
+  setAuth: (token: string, user: User) => void;
+  setAccessToken: (token: string) => void;
+  clearAuth: () => void;
+  isAuthenticated: () => boolean;
+}
+
+export const useAuthStore = create<AuthStore>((set, get) => ({
+  accessToken: null,
+  user: null,
+  setAuth: (token, user) => set({ accessToken: token, user }),
+  setAccessToken: (token) => set({ accessToken: token }),
+  clearAuth: () => set({ accessToken: null, user: null }),
+  isAuthenticated: () => !!get().accessToken,
+}));
+```
+
+### Protected Route Component
+```typescript
+// src/components/layout/ProtectedRoute.tsx
+import { Navigate, Outlet } from 'react-router-dom';
+import { useAuthStore } from '@/store/authStore';
+
+export const ProtectedRoute = () => {
+  const isAuthenticated = useAuthStore(s => s.isAuthenticated());
+  return isAuthenticated ? <Outlet /> : <Navigate to="/login" replace />;
+};
+```
+
+### TanStack Query Hook Pattern
+```typescript
+// src/hooks/usePets.ts
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { petsService } from '@/services/pets.service';
+import toast from 'react-hot-toast';
+
+export const usePets = () =>
+  useQuery({ queryKey: ['pets'], queryFn: petsService.getAll });
+
+export const useDeletePet = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: petsService.delete,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['pets'] });
+      toast.success('Pet removed');
+    },
+    onError: () => toast.error('Failed to remove pet'),
+  });
+};
+```
+
+### StatusBadge Component
+```typescript
+// src/components/ui/StatusBadge.tsx
+import type { VaccinationStatus } from '@/types';
+
+const config = {
+  completed: { label: 'Completed', bg: 'bg-[#6BCB77]/15', text: 'text-[#6BCB77]' },
+  upcoming:  { label: 'Upcoming',  bg: 'bg-[#F2B544]/15', text: 'text-[#F2B544]' },
+  overdue:   { label: 'Overdue',   bg: 'bg-[#E76F51]/15', text: 'text-[#E76F51]' },
+};
+
+export const StatusBadge = ({ status }: { status: VaccinationStatus }) => {
+  const { label, bg, text } = config[status];
+  return (
+    <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${bg} ${text}`}>
+      {label}
+    </span>
+  );
+};
+```
+
+---
+
+## UX REQUIREMENTS
+
+### Every data list MUST have 3 states:
+1. **Loading** → `SkeletonLoader` component (animated shimmer)
+2. **Empty** → `EmptyState` component (icon + message + CTA button)
+3. **Data** → actual content
+
+### Priority Display Rules:
+- Overdue items → always first, red colour treatment
+- Upcoming within 7 days → second, amber
+- Everything else → chronological
+
+### Mutations:
+- Show `react-hot-toast` on success AND error
+- Use optimistic updates for "mark as done" actions
+- Confirm dialog for ALL delete actions
+
+### Animations (Framer Motion):
+```
+Page transitions:  { initial: {opacity:0, y:8}, animate: {opacity:1, y:0}, transition: {duration: 0.2} }
+Card hover:        { whileHover: { y: -2 } }  (desktop only)
+Modal open:        { initial: {opacity:0, scale:0.95}, animate: {opacity:1, scale:1} }
+Progress bar:      animate width on mount
+Overdue badge:     subtle pulse animation
+```
+
+---
+
+## IMPLEMENTATION ORDER
+
+Execute in this exact order:
+
+1. **Vite project scaffold** — `npm create vite@latest` with React + TypeScript
+2. **Install all dependencies** in one `npm install` command
+3. **Tailwind config** — add all color tokens as custom theme extensions
+4. **CSS variables** — add to `src/index.css`
+5. **Google Font** — add DM Sans to `index.html`
+6. **TypeScript interfaces** — `src/types/index.ts`
+7. **Mock data** — `src/data/mockData.ts`
+8. **Utility functions** — `dateUtils.ts` and `statusUtils.ts`
+9. **Constants** — `routes.ts`
+10. **Axios + interceptors** — `src/services/api.ts` (critical — get this right first)
+11. **Zustand stores** — `authStore.ts` and `petStore.ts`
+12. **UI component library** — build ALL primitives before any pages
+13. **Layout shell** — AppLayout, Sidebar, BottomNav, ProtectedRoute
+14. **React Router config** — all routes in App.tsx
+15. **Auth pages** — Landing, Login, Signup, VerifyOtp, ForgotPassword, ResetPassword
+16. **Service layer** — all service files (real + stubs)
+17. **TanStack Query hooks** — all hooks
+18. **Dashboard** — most complex page, sets quality bar
+19. **Pet management** — List, Add, Profile (real API)
+20. **Vaccination tracker** (real API)
+21. **Medication tracker** (mock)
+22. **Deworming tracker** (mock)
+23. **Vet visit history** (mock)
+24. **Weight tracking + graph** (mock)
+25. **Documents** (mock)
+26. **Settings**
+
+---
+
+## FINAL CHECKLIST BEFORE SUBMITTING ANY PAGE
+
+- [ ] TypeScript — no `any`, all props typed, no missing return types
+- [ ] Loading skeleton shown while fetching
+- [ ] Empty state with CTA shown when data is empty
+- [ ] Error handled with toast notification
+- [ ] Mobile layout correct (single column, bottom nav visible)
+- [ ] Tablet layout correct (2-column where appropriate)
+- [ ] Desktop layout correct (sidebar visible, good use of space)
+- [ ] Status colours match the design system exactly
+- [ ] No `localStorage` usage for auth tokens
+- [ ] Delete actions have ConfirmDialog
+- [ ] Framer Motion page transition applied
+
+---
+
+Begin with step 1: scaffold the Vite project and install all dependencies. After that, work through the implementation order. Do not skip steps.
