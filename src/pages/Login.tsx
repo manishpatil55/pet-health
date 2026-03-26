@@ -351,6 +351,10 @@ export default function Login({ initialView = 'login' }: { initialView?: ViewSta
         } catch (err: any) {
             if (err instanceof z.ZodError) {
                 setError((err as any).errors[0].message);
+            } else if (err.code === 'ECONNABORTED') {
+                setError('The server is taking too long to respond. The email service might be down.');
+            } else if (!err.response) {
+                setError('Network error: Unable to connect to the server.');
             } else {
                 setError(err?.response?.data?.message || 'Signup failed');
             }

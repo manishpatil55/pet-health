@@ -18,6 +18,7 @@ const processQueue = (error: unknown, token: string | null = null) => {
 const api = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL,
   withCredentials: true, // CRITICAL: sends HttpOnly cookie on refresh calls
+  timeout: 20000, // 20 second timeout so it doesn't spin forever
   headers: {
     'Content-Type': 'application/json',
   },
