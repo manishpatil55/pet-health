@@ -18,6 +18,7 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { useAuthStore } from '@/store/authStore';
 import { authService } from '@/services/auth.service';
 import { ROUTES } from '@/constants/routes';
+import { queryClient } from '@/App';
 
 const passwordSchema = z
   .object({
@@ -89,6 +90,7 @@ const Settings = () => {
   const handleLogout = async () => {
     try {
       await authService.logout();
+      queryClient.clear();
       clearAuth();
       toast.success('Logged out');
       navigate(ROUTES.LOGIN);
@@ -100,6 +102,7 @@ const Settings = () => {
   const handleLogoutAll = async () => {
     try {
       await authService.logoutAll();
+      queryClient.clear();
       clearAuth();
       toast.success('All sessions logged out');
       navigate(ROUTES.LOGIN);

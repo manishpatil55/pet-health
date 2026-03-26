@@ -8,6 +8,7 @@ import { ROUTES } from '@/constants/routes';
 import { authService } from '@/services/auth.service';
 import { useAuthStore } from '@/store/authStore';
 import { useGoogleAuth } from '@/hooks/useGoogleAuth';
+import { queryClient } from '@/App';
 
 // ─── ZOD SCHEMAS ─────────────────────────────────────────────────────────────
 const loginSchema = z.object({
@@ -310,6 +311,10 @@ export default function Login({ initialView = 'login' }: { initialView?: ViewSta
             setLoading(true);
             setPendingEmail(parsed.email);
             const res = await authService.login(parsed);
+            
+            // Clear any old user's data from React Query cache before switching user
+            queryClient.clear();
+            
             storeSetRememberMe(rememberMe);
             setAuth(res.accessToken, res.user);
             toast.success('Welcome back!');

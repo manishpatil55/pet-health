@@ -24,7 +24,7 @@ import WeightTracking from '@/pages/WeightTracking';
 import Documents from '@/pages/Documents';
 import Settings from '@/pages/Settings';
 
-const queryClient = new QueryClient({
+export const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
       staleTime: 5 * 60 * 1000, // 5 minutes

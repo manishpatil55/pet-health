@@ -5,6 +5,7 @@ import { useAuthStore } from '@/store/authStore';
 import { authService } from '@/services/auth.service';
 import { useNavigate } from 'react-router-dom';
 import toast from 'react-hot-toast';
+import { queryClient } from '@/App';
 
 const provider = new GoogleAuthProvider();
 
@@ -40,6 +41,7 @@ export const useGoogleAuth = () => {
     } catch (error) {
       console.error('Logout error:', error);
     } finally {
+      queryClient.clear();
       clearAuth();
       navigate('/signin');
     }
