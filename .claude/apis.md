@@ -43,6 +43,9 @@ Base URL: `http://localhost:5000/api/v1` (dynamic via `VITE_API_BASE_URL`)
 - `GET /vaccinations/pet/:petId/overdue/`
 - `PATCH /vaccinations/:id/complete/`
 
+## Documents
+- `GET /vaccinations/:id/document/` — Get all documents for a vaccination record
+
 # Medication APIs
 - `POST /medications/` — `{ pet, medicineName, dosage, frequency, customIntervalHours, startDate, endDate, notes }`
 - `GET /medications/pet/:petId/` — Get all for pet

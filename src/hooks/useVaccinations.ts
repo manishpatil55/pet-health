@@ -1,6 +1,5 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { vaccinationsService } from '@/services/vaccinations.service';
-import type { Vaccination } from '@/types';
 import toast from 'react-hot-toast';
 
 export const useVaccinations = (petId: string) =>
@@ -32,20 +31,28 @@ export const useAutoGenerateVaccinations = () => {
       qc.invalidateQueries({ queryKey: ['vaccinations', petId] });
       toast.success('Vaccination schedule generated!');
     },
-    onError: () => toast.error('Failed to generate schedule'),
+    onError: (err: any) => {
+      const msg = err?.response?.data?.message || err?.message || 'Failed to generate schedule';
+      console.error('Auto-generate error:', err?.response?.data || err);
+      toast.error(msg);
+    },
   });
 };
 
 export const useCreateVaccination = () => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: Omit<Vaccination, '_id' | 'createdBy' | 'status'>) =>
-      vaccinationsService.create(data),
-    onSuccess: (res) => {
-      qc.invalidateQueries({ queryKey: ['vaccinations', res.data.pet] });
+    mutationFn: (data: any) => vaccinationsService.create(data),
+    onSuccess: (_res, vars) => {
+      const pid = vars.petId || vars.pet;
+      qc.invalidateQueries({ queryKey: ['vaccinations', pid] });
       toast.success('Vaccination added');
     },
-    onError: () => toast.error('Failed to add vaccination'),
+    onError: (err: any) => {
+      const msg = err?.response?.data?.message || err?.message || 'Failed to add vaccination';
+      console.error('Vaccination creation error:', err?.response?.data || err);
+      toast.error(msg);
+    },
   });
 };
 
@@ -54,10 +61,13 @@ export const useMarkVaccinationComplete = () => {
   return useMutation({
     mutationFn: (id: string) => vaccinationsService.markComplete(id),
     onSuccess: (res) => {
-      qc.invalidateQueries({ queryKey: ['vaccinations', res.data.pet] });
+      const pid = (res.data as any).petId || (res.data as any).pet;
+      qc.invalidateQueries({ queryKey: ['vaccinations', pid] });
       toast.success('Marked as complete');
     },
-    onError: () => toast.error('Failed to mark as complete'),
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message || 'Failed to mark as complete');
+    },
   });
 };
 
@@ -70,6 +80,8 @@ export const useDeleteVaccination = () => {
       qc.invalidateQueries({ queryKey: ['vaccinations', res.petId] });
       toast.success('Vaccination removed');
     },
-    onError: () => toast.error('Failed to remove vaccination'),
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message || 'Failed to remove vaccination');
+    },
   });
 };

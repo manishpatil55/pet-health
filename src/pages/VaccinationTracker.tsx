@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { ArrowLeft, Plus, Syringe, Zap, Check, Trash2 } from 'lucide-react';
-import toast from 'react-hot-toast';
 
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -10,6 +9,7 @@ import { StatusBadge } from '@/components/ui/StatusBadge';
 import { SkeletonLoader } from '@/components/ui/SkeletonLoader';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
+import { AddVaccinationModal } from '@/components/modals/AddVaccinationModal';
 
 import { usePet } from '@/hooks/usePets';
 import {
@@ -27,6 +27,7 @@ const VaccinationTracker = () => {
   const { id: petId } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [filter, setFilter] = useState<Filter>('all');
+  const [showAddModal, setShowAddModal] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
 
   const { data: petData } = usePet(petId!);
@@ -72,7 +73,7 @@ const VaccinationTracker = () => {
           >
             <Zap className="h-4 w-4" /> Auto-Generate
           </Button>
-          <Button size="sm" className="gap-1" onClick={() => toast.success('Manual add coming soon!')}>
+          <Button size="sm" className="gap-1" onClick={() => setShowAddModal(true)}>
             <Plus className="h-4 w-4" /> Add
           </Button>
         </div>
@@ -173,6 +174,14 @@ const VaccinationTracker = () => {
         confirmLabel="Delete"
         variant="danger"
       />
+
+      {petId && (
+        <AddVaccinationModal
+          open={showAddModal}
+          onClose={() => setShowAddModal(false)}
+          petId={petId}
+        />
+      )}
     </motion.div>
   );
 };
