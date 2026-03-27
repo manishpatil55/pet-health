@@ -36,22 +36,33 @@ export function AddVetVisitModal({ open, onClose, petId }: AddVetVisitModalProps
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
+    defaultValues: {
+      visitType: 'routine',
+      visitDate: new Date().toISOString().split('T')[0],
+    },
   });
 
   const onSubmit = async (data: FormData) => {
-    await createVisit.mutateAsync({
+    // Build payload with ONLY the fields the backend expects
+    const payload: Record<string, any> = {
       petId,
       visitDate: data.visitDate,
       visitType: data.visitType,
       clinicName: data.clinicName,
       veterinarianName: data.veterinarianName,
-      diagnosis: data.diagnosis || '',
-      treatment: data.treatmentDetails || '',
-      treatmentDetails: data.treatmentDetails || '',
-      cost: data.cost ? Number(data.cost) : undefined,
-      currency: 'INR',
-      notes: data.notes || undefined,
-    } as any);
+    };
+
+    // Only include optional fields if they have actual values
+    if (data.diagnosis?.trim()) payload.diagnosis = data.diagnosis.trim();
+    if (data.treatmentDetails?.trim()) payload.treatmentDetails = data.treatmentDetails.trim();
+    if (data.cost && Number(data.cost) > 0) {
+      payload.cost = Number(data.cost);
+      payload.currency = 'INR';
+    }
+    if (data.notes?.trim()) payload.notes = data.notes.trim();
+
+    console.log('Sending vet visit payload:', payload);
+    await createVisit.mutateAsync(payload);
     reset();
     onClose();
   };

@@ -14,12 +14,17 @@ export const useVetVisits = (petId: string) =>
 export const useCreateVetVisit = () => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: Omit<VetVisit, '_id'>) => vetVisitsService.create(data),
-    onSuccess: (res) => {
-      qc.invalidateQueries({ queryKey: ['vetVisits', res.data.pet] });
+    mutationFn: (data: any) => vetVisitsService.create(data),
+    onSuccess: (_res, vars) => {
+      const pid = vars.petId || vars.pet;
+      qc.invalidateQueries({ queryKey: ['vetVisits', pid] });
       toast.success('Visit recorded');
     },
-    onError: () => toast.error('Failed to record visit'),
+    onError: (err: any) => {
+      const msg = err?.response?.data?.message || err?.message || 'Failed to record visit';
+      console.error('Vet visit creation error:', err?.response?.data || err);
+      toast.error(msg);
+    },
   });
 };
 
