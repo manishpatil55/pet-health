@@ -1,7 +1,7 @@
 import { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { ArrowLeft, Plus, Weight as WeightIcon, TrendingUp, TrendingDown, Minus } from 'lucide-react';
+import { ArrowLeft, Plus, Weight as WeightIcon, TrendingUp, TrendingDown, Minus, Trash2 } from 'lucide-react';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
 } from 'recharts';
@@ -11,9 +11,10 @@ import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { SkeletonLoader } from '@/components/ui/SkeletonLoader';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { AddWeightModal } from '@/components/modals/AddWeightModal';
 import { usePet } from '@/hooks/usePets';
-import { useWeightEntries } from '@/hooks/useWeight';
+import { useWeightEntries, useDeleteWeight } from '@/hooks/useWeight';
 import { formatDate } from '@/utils/dateUtils';
 
 type Range = '1M' | '3M' | '6M' | '1Y';
@@ -23,9 +24,11 @@ const WeightTracking = () => {
   const navigate = useNavigate();
   const [range, setRange] = useState<Range>('6M');
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
 
   const { data: petData } = usePet(petId!);
   const { data: weightData, isLoading } = useWeightEntries(petId!);
+  const deleteWeight = useDeleteWeight();
 
   const pet = petData?.data;
   const weights = weightData?.data ?? [];
@@ -146,12 +149,21 @@ const WeightTracking = () => {
             <h3 className="text-base font-semibold text-[#2F3A3A] mb-3">All Entries</h3>
             <div className="divide-y divide-[#E6EEEE]">
               {[...weights].reverse().map((w) => (
-                <div key={w._id} className="flex items-center justify-between py-2.5 text-sm">
+                <div key={w._id} className="flex items-center justify-between py-2.5 text-sm group">
                   <div>
                     <span className="text-[#7A8A8A]">{formatDate(w.recordedDate)}</span>
                     {w.notes && <span className="text-xs text-[#7A8A8A] ml-2 italic">— {w.notes}</span>}
                   </div>
-                  <span className="font-medium text-[#2F3A3A]">{w.weight} {w.unit}</span>
+                  <div className="flex items-center gap-3">
+                    <span className="font-medium text-[#2F3A3A]">{w.weight} {w.unit}</span>
+                    <button
+                      onClick={() => setDeleteTarget(w._id)}
+                      className="p-1.5 text-[#CFEDEA] hover:text-[#E76F51] hover:bg-[#FCECE8] rounded transition-colors"
+                      title="Delete entry"
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -166,6 +178,19 @@ const WeightTracking = () => {
           petId={petId}
         />
       )}
+
+      <ConfirmDialog
+        open={!!deleteTarget}
+        onClose={() => setDeleteTarget(null)}
+        onConfirm={() => {
+          if (deleteTarget) deleteWeight.mutate({ logId: deleteTarget, petId: petId! });
+          setDeleteTarget(null);
+        }}
+        title="Delete Weight Entry"
+        message="Are you sure you want to delete this weight log? This action cannot be undone."
+        confirmLabel="Delete"
+        variant="danger"
+      />
     </motion.div>
   );
 };

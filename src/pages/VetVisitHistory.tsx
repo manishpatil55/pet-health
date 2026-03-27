@@ -1,15 +1,16 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, Plus, Stethoscope, ChevronDown, ChevronUp } from 'lucide-react';
+import { ArrowLeft, Plus, Stethoscope, ChevronDown, ChevronUp, Trash2 } from 'lucide-react';
 
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { SkeletonLoader } from '@/components/ui/SkeletonLoader';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { AddVetVisitModal } from '@/components/modals/AddVetVisitModal';
 import { usePet } from '@/hooks/usePets';
-import { useVetVisits } from '@/hooks/useVetVisits';
+import { useVetVisits, useDeleteVetVisit } from '@/hooks/useVetVisits';
 import { formatDate } from '@/utils/dateUtils';
 
 const VetVisitHistory = () => {
@@ -17,9 +18,11 @@ const VetVisitHistory = () => {
   const navigate = useNavigate();
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
 
   const { data: petData } = usePet(petId!);
   const { data: visitsResponse, isLoading } = useVetVisits(petId!);
+  const deleteVisit = useDeleteVetVisit();
 
   const pet = petData?.data;
   const vetVisits = visitsResponse?.data ?? [];
@@ -69,7 +72,18 @@ const VetVisitHistory = () => {
                         </p>
                         <p className="text-sm text-[#2F3A3A] mt-1 line-clamp-1">{v.diagnosis}</p>
                       </div>
-                      {isExpanded ? <ChevronUp className="h-4 w-4 text-[#7A8A8A]" /> : <ChevronDown className="h-4 w-4 text-[#7A8A8A]" />}
+                      <div className="flex items-center gap-2">
+                        <Button
+                          size="sm"
+                          variant="ghost"
+                          onClick={(e) => { e.stopPropagation(); setDeleteTarget(v._id); }}
+                          className="!p-1.5 hover:bg-[#FCECE8]"
+                          title="Delete"
+                        >
+                          <Trash2 className="h-4 w-4 text-[#E76F51]" />
+                        </Button>
+                        {isExpanded ? <ChevronUp className="h-4 w-4 text-[#7A8A8A]" /> : <ChevronDown className="h-4 w-4 text-[#7A8A8A]" />}
+                      </div>
                     </div>
                   </button>
 
@@ -113,6 +127,19 @@ const VetVisitHistory = () => {
       open={showAddModal}
       onClose={() => setShowAddModal(false)}
       petId={petId!}
+    />
+
+    <ConfirmDialog
+      open={!!deleteTarget}
+      onClose={() => setDeleteTarget(null)}
+      onConfirm={() => {
+        if (deleteTarget) deleteVisit.mutate({ id: deleteTarget, petId: petId! });
+        setDeleteTarget(null);
+      }}
+      title="Delete Vet Visit"
+      message="Are you sure you want to delete this vet visit record? This action cannot be undone."
+      confirmLabel="Delete"
+      variant="danger"
     />
     </>
   );
