@@ -9,10 +9,11 @@ import { useCreateVetVisit } from '@/hooks/useVetVisits';
 
 const schema = z.object({
   visitDate: z.string().min(1, 'Visit date is required'),
+  visitType: z.string().min(1, 'Visit type is required'),
   clinicName: z.string().min(1, 'Clinic name is required'),
   veterinarianName: z.string().min(1, 'Vet name is required'),
-  diagnosis: z.string().min(1, 'Diagnosis is required'),
-  treatmentDetails: z.string().min(1, 'Treatment details are required'),
+  diagnosis: z.string().optional(),
+  treatmentDetails: z.string().optional(),
   cost: z.string().optional(),
   notes: z.string().optional(),
 });
@@ -39,16 +40,18 @@ export function AddVetVisitModal({ open, onClose, petId }: AddVetVisitModalProps
 
   const onSubmit = async (data: FormData) => {
     await createVisit.mutateAsync({
-      pet: petId,
+      petId,
       visitDate: data.visitDate,
+      visitType: data.visitType,
       clinicName: data.clinicName,
       veterinarianName: data.veterinarianName,
-      diagnosis: data.diagnosis,
-      treatment: data.treatmentDetails,
-      treatmentDetails: data.treatmentDetails,
+      diagnosis: data.diagnosis || '',
+      treatment: data.treatmentDetails || '',
+      treatmentDetails: data.treatmentDetails || '',
       cost: data.cost ? Number(data.cost) : undefined,
+      currency: 'INR',
       notes: data.notes || undefined,
-    });
+    } as any);
     reset();
     onClose();
   };
@@ -70,6 +73,20 @@ export function AddVetVisitModal({ open, onClose, petId }: AddVetVisitModalProps
           error={errors.visitDate?.message}
           {...register('visitDate')}
         />
+
+        <div>
+          <label className="block text-sm font-medium text-[#2F3A3A] mb-1.5">Visit Type</label>
+          <select
+            {...register('visitType')}
+            className="w-full rounded-lg border border-[#E6EEEE] px-3 py-2.5 text-sm text-[#2F3A3A] focus:outline-none focus:ring-2 focus:ring-[#4FB6B2]"
+          >
+            <option value="routine">Routine Checkup</option>
+            <option value="follow-up">Follow-up</option>
+            <option value="emergency">Emergency</option>
+            <option value="specialist">Specialist</option>
+          </select>
+          {errors.visitType && <p className="mt-1.5 text-xs text-[#E76F51]">{errors.visitType.message}</p>}
+        </div>
 
         <div className="grid grid-cols-2 gap-3">
           <Input

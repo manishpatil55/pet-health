@@ -37,9 +37,9 @@ export const vetVisitsService = {
 
   /** Create a new vet visit record */
   create: async (
-    data: Omit<VetVisit, '_id'>,
+    data: Record<string, any>,
   ): Promise<VetVisitResponse> => {
-    const res = await api.post('/vetvisits', data);
+    const res = await api.post('/vetvisits/', data);
     return res.data;
   },
 
