@@ -30,27 +30,34 @@ export const useDoseLogs = (medicationId: string) =>
 export const useCreateMedication = () => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (data: Omit<Medication, '_id' | 'createdBy' | 'status'>) =>
-      medicationsService.create(data),
-    onSuccess: (res) => {
-      qc.invalidateQueries({ queryKey: ['medications', res.data.pet] });
+    mutationFn: (data: any) => medicationsService.create(data),
+    onSuccess: (_res, vars) => {
+      const pid = vars.petId || vars.pet;
+      qc.invalidateQueries({ queryKey: ['medications', pid] });
       toast.success('Medication added');
     },
-    onError: () => toast.error('Failed to add medication'),
+    onError: (err: any) => {
+      const msg = err?.response?.data?.message || err?.message || 'Failed to add medication';
+      console.error('Medication creation error:', err?.response?.data || err);
+      toast.error(msg);
+    },
   });
 };
 
 export const useUpdateMedication = () => {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: Partial<Medication> }) =>
+    mutationFn: ({ id, data }: { id: string; data: Partial<Medication>; petId?: string }) =>
       medicationsService.update(id, data),
-    onSuccess: (res) => {
-      qc.invalidateQueries({ queryKey: ['medications', res.data.pet] });
+    onSuccess: (res, vars) => {
+      const pid = vars.petId || res.data.pet;
+      qc.invalidateQueries({ queryKey: ['medications', pid] });
       qc.invalidateQueries({ queryKey: ['medication', res.data._id] });
       toast.success('Medication updated');
     },
-    onError: () => toast.error('Failed to update'),
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message || 'Failed to update');
+    },
   });
 };
 

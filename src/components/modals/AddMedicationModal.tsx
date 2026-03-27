@@ -45,22 +45,27 @@ export function AddMedicationModal({ open, onClose, petId }: AddMedicationModalP
     formState: { errors },
   } = useForm<FormData>({
     resolver: zodResolver(schema),
-    defaultValues: { frequency: 'once-daily' },
+    defaultValues: {
+      frequency: 'once-daily',
+      startDate: new Date().toISOString().split('T')[0],
+    },
   });
 
   const onSubmit = async (data: FormData) => {
-    await createMed.mutateAsync({
-      pet: petId,
+    const payload: Record<string, any> = {
+      petId,
       medicineName: data.medicineName,
       dosage: data.dosage,
       frequency: data.frequency,
-      customIntervalHours: data.frequency === 'custom' && data.customIntervalHours
-        ? Number(data.customIntervalHours)
-        : undefined,
       startDate: data.startDate,
       endDate: data.endDate,
-      notes: data.notes || undefined,
-    });
+    };
+    if (data.frequency === 'custom' && data.customIntervalHours) {
+      payload.customIntervalHours = Number(data.customIntervalHours);
+    }
+    if (data.notes?.trim()) payload.notes = data.notes.trim();
+
+    await createMed.mutateAsync(payload);
     reset();
     onClose();
   };

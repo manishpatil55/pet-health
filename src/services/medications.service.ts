@@ -30,9 +30,9 @@ export const medicationsService = {
 
   /** Create a new medication treatment */
   create: async (
-    data: Omit<Medication, '_id' | 'createdBy' | 'status'>,
+    data: Record<string, any>,
   ): Promise<MedResponse> => {
-    const res = await api.post('/medications', data);
+    const res = await api.post('/medications/', data);
     return res.data;
   },
 
