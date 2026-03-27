@@ -53,7 +53,7 @@ export function AddMedicationModal({ open, onClose, petId }: AddMedicationModalP
 
   const onSubmit = async (data: FormData) => {
     const payload: Record<string, any> = {
-      petId,
+      pet: petId,
       medicineName: data.medicineName,
       dosage: data.dosage,
       frequency: data.frequency,
