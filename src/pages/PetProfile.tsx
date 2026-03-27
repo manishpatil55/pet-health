@@ -32,11 +32,12 @@ import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { usePet, useDeletePet } from '@/hooks/usePets';
 import { useVaccinations } from '@/hooks/useVaccinations';
 import { useMedications } from '@/hooks/useMedications';
-import { useDeworming } from '@/hooks/useDeworming';
+import { useDewormingSchedule, useDewormingHistory } from '@/hooks/useDeworming';
 import { useVetVisits } from '@/hooks/useVetVisits';
 import { useWeightEntries } from '@/hooks/useWeight';
 
 import { calculateAge, formatDate } from '@/utils/dateUtils';
+import { calculateNextDue } from '@/utils/dewormingUtils';
 import { ROUTES, buildPath } from '@/constants/routes';
 
 // ─── Design tokens ─────────────────────────────────────────────────────────────
@@ -486,15 +487,30 @@ const PetProfile = () => {
 
   const { data: vaccData } = useVaccinations(id!);
   const { data: medsData } = useMedications(id!);
-  const { data: dewormData } = useDeworming(id!);
+  const { data: scheduleData } = useDewormingSchedule(id!);
+  const { data: historyData } = useDewormingHistory(id!);
   const { data: vetData } = useVetVisits(id!);
   const { data: weightData } = useWeightEntries(id!);
 
   const vaccinations = vaccData?.data ?? [];
   const medications = medsData?.data ?? [];
-  const dewormings = dewormData ?? [];
+  const schedule = scheduleData?.data;
+  const records = historyData?.data || [];
   const vetVisits = vetData?.data ?? [];
   const weights = weightData ?? [];
+
+  // Compute dewormings array for OverviewBento (expects { nextDueDate, medicineName })
+  const dewormings: any[] = (() => {
+    if (!schedule) return [];
+    let nextDueDateStr: string;
+    if (records.length > 0) {
+      const sorted = [...records].sort((a, b) => new Date(b.dateAdministered).getTime() - new Date(a.dateAdministered).getTime());
+      nextDueDateStr = calculateNextDue(sorted[0].dateAdministered, schedule.frequency);
+    } else {
+      nextDueDateStr = calculateNextDue(new Date().toISOString(), schedule.frequency);
+    }
+    return [{ nextDueDate: nextDueDateStr, medicineName: `${schedule.frequency} dose` }];
+  })();
 
   const handleDelete = async () => {
     await deletePet.mutateAsync(id!);

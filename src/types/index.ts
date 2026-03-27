@@ -80,17 +80,24 @@ export interface DoseLog {
 
 // ─── Deworming ──────────────────────────────────────────────
 
-export type DewormingFrequency = 'monthly' | 'bi-monthly' | 'quarterly' | 'custom';
+export type DewormingFrequency = 'monthly' | 'bi-monthly' | 'quarterly' | 'custom' | string;
 export type DewormingStatus = 'completed' | 'upcoming' | 'overdue';
+
+export interface DewormingSchedule {
+  _id: string;
+  petId: string;
+  frequency: DewormingFrequency;
+}
 
 export interface DewormingRecord {
   _id: string;
-  pet: string;
-  frequency: DewormingFrequency;
-  lastDate: string;
-  nextDueDate: string;
+  petId: string;
+  dateAdministered: string;
+  productName: string;
+  administeredBy: string;
   notes?: string;
-  status: DewormingStatus;
+  // added locally by frontend hooks for UI purposes if needed, though usually omitted from raw Record
+  status?: DewormingStatus;
 }
 
 // ─── Vet Visit ──────────────────────────────────────────────

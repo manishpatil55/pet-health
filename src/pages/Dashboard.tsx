@@ -25,14 +25,16 @@ import { Select } from '@/components/ui/Select';
 import { usePets } from '@/hooks/usePets';
 import { useVaccinations } from '@/hooks/useVaccinations';
 import { useMedications } from '@/hooks/useMedications';
-import { useDeworming } from '@/hooks/useDeworming';
+import { useDewormingSchedule, useDewormingHistory } from '@/hooks/useDeworming';
 import { useVetVisits } from '@/hooks/useVetVisits';
 import { useWeightEntries } from '@/hooks/useWeight';
 import { useAuthStore } from '@/store/authStore';
 import { usePetStore } from '@/store/petStore';
 
 import { formatDate, calculateAge, formatCountdown, isWithinDays } from '@/utils/dateUtils';
+import { calculateNextDue, getComputedStatus } from '@/utils/dewormingUtils';
 import { ROUTES, buildPath } from '@/constants/routes';
+import type { DewormingStatus } from '@/types';
 
 // ─── Design tokens ─────────────────────────────────────────────────────────────
 const C = {
@@ -313,13 +315,15 @@ const Dashboard = () => {
 
   const { data: vaccData, isLoading: vaccLoading } = useVaccinations(selectedPetId);
   const { data: medsData } = useMedications(selectedPetId);
-  const { data: dewormData } = useDeworming(selectedPetId);
+  const { data: scheduleData } = useDewormingSchedule(selectedPetId);
+  const { data: historyData } = useDewormingHistory(selectedPetId);
   const { data: vetData } = useVetVisits(selectedPetId);
   const { data: weightData } = useWeightEntries(selectedPetId);
 
   const vaccinations = vaccData?.data ?? [];
   const medications = medsData?.data ?? [];
-  const dewormings = dewormData ?? [];
+  const schedule = scheduleData?.data;
+  const records = historyData?.data || [];
   const vetVisits = vetData?.data ?? [];
   const weights = weightData ?? [];
 
@@ -336,10 +340,28 @@ const Dashboard = () => {
     () => medications.filter((m: any) => m.status === 'active'),
     [medications],
   );
-  const nextDeworming = useMemo(
-    () => dewormings.find((d: any) => d.status === 'upcoming' || d.status === 'overdue'),
-    [dewormings],
-  );
+  const nextDeworming = useMemo(() => {
+    if (!schedule) return null;
+    let nextDueDateStr: string | null = null;
+    let nextDueStatus: DewormingStatus | null = null;
+
+    if (records.length > 0) {
+      const sortedRecords = [...records].sort((a, b) => new Date(b.dateAdministered).getTime() - new Date(a.dateAdministered).getTime());
+      const latestRecord = sortedRecords[0];
+      nextDueDateStr = calculateNextDue(latestRecord.dateAdministered, schedule.frequency);
+    } else {
+      nextDueDateStr = calculateNextDue(new Date().toISOString(), schedule.frequency);
+    }
+
+    if (nextDueDateStr) {
+      nextDueStatus = getComputedStatus(nextDueDateStr);
+      return {
+        nextDueDate: nextDueDateStr,
+        status: nextDueStatus
+      };
+    }
+    return null;
+  }, [schedule, records]);
   const latestVetVisit = useMemo(
     () => vetVisits.length > 0
       ? [...vetVisits].sort((a: any, b: any) =>

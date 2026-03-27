@@ -37,11 +37,11 @@ export const mockMedications: Medication[] = [
 export const mockDeworming: DewormingRecord[] = [
   {
     _id: 'dew-1',
-    pet: 'pet-1',
-    frequency: 'quarterly',
-    lastDate: '2025-01-15',
-    nextDueDate: '2025-04-15',
-    status: 'upcoming',
+    petId: 'pet-1',
+    dateAdministered: '2025-01-15',
+    productName: 'Drontal Plus',
+    administeredBy: 'Dr. Sharma',
+    notes: 'Routine quarterly deworming',
   },
 ];
 

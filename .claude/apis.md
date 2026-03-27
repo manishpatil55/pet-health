@@ -61,3 +61,81 @@ Base URL: `http://localhost:5000/api/v1` (Note: we use dynamic `VITE_API_BASE_UR
 - **Endpoint**: `POST /auth/verify-email/`
 - **Body**: `{ "email": "test@gmail.com", "otp": "965834" }`
 - **Response**: No response body.
+
+# Pet APIs
+
+## 1. Get all pets
+- **Endpoint**: `GET /pets/`
+- **Headers**: `Authorization: Bearer <token>`
+- **Response**: Array of pets or `{ success: true, data: [...] }`
+
+## 2. Create pet
+- **Endpoint**: `POST /pets/`
+- **Headers**: `Authorization: Bearer <token>`
+- **Body**: 
+```json
+{
+  "name": "Buddy",
+  "type": "Dog",
+  "breed": "Labrador",
+  "gender": "Male",
+  "dateOfBirth": "2022-01-15",
+  "initialWeight": 10,
+  "photo": "url_or_base64",
+  "microchipId": "123ABC"
+}
+```
+
+## 3. Get pet by id
+- **Endpoint**: `GET /pets/{{id}}/`
+- **Headers**: `Authorization: Bearer <token>`
+
+## 4. Update pet
+- **Endpoint**: `PUT /pets/{{id}}/`
+- **Headers**: `Authorization: Bearer <token>`
+- **Body**: 
+```json
+{
+  "name": "Max",
+  "breed": "Poodle"
+}
+```
+
+## 5. Delete pet
+- **Endpoint**: `DELETE /pets/{{id}}/`
+- **Headers**: `Authorization: Bearer <token>`
+
+# Vaccination APIs
+
+## 1. Vaccination Templates (Admin / Setup)
+- `POST /vaccinations/templates/` - Create template
+- `GET /vaccinations/templates/` - Get all templates
+- `PUT /vaccinations/templates/:id` - Update template
+- `DELETE /vaccinations/templates/:id` - Delete template
+
+## 2. Vaccination Records (Core CRUD)
+- `POST /vaccinations/` - Create vaccination record
+- `GET /vaccinations/pet/:id/` - Get all vaccinations by Pet ID
+- `GET /vaccinations/:id/` - Get vaccination by ID
+- `PUT /vaccinations/:id/` - Update vaccination record
+- `DELETE /vaccinations/:id/` - Delete vaccination record
+
+## 3. Vaccination Timeline & Actions
+- `GET /vaccinations/pet/:id/upcoming/` - Get upcoming vaccinations
+- `GET /vaccinations/pet/:id/overdue/` - Get overdue vaccinations
+- `PATCH /vaccinations/:id/complete/` - Mark vaccination as complete
+
+# Deworming APIs
+
+## 1. Deworming Schedules
+- `POST /deworming/schedules/` - Create Schedule 
+- `GET /deworming/schedules/:petId/` - Get Schedule for a Pet 
+- `PATCH /deworming/schedules/:scheduleId/` - Update Schedule
+- `DELETE /deworming/schedules/:scheduleId/` - Deactivate Schedule
+
+## 2. Deworming Records
+- `POST /deworming/records/` - Add Deworming Record
+- `GET /deworming/records/:petId/history` - Get Deworming History for a Pet
+- `GET /deworming/records/record/:recordId/` - Get Single Record
+- `PATCH /deworming/records/record/:recordId/` - Update Record
+- `DELETE /deworming/records/record/:recordId/` - Delete Record
