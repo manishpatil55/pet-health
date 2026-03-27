@@ -5,9 +5,27 @@ interface VetVisitResponse { success: boolean; data: VetVisit }
 interface VetVisitListResponse { success: boolean; data: VetVisit[] }
 
 export const vetVisitsService = {
-  /** Get all vet visits for a pet */
-  getAll: async (petId: string): Promise<VetVisitListResponse> => {
-    const res = await api.get(`/vetvisits/pet/${petId}`);
+  /** Get all vet visits for a pet (supports query filters) */
+  getAll: async (petId: string, params?: { visitType?: string; from?: string; to?: string }): Promise<VetVisitListResponse> => {
+    const res = await api.get(`/vetvisits/${petId}`, { params });
+    return res.data;
+  },
+
+  /** Get upcoming visits */
+  getUpcoming: async (petId: string): Promise<VetVisitListResponse> => {
+    const res = await api.get(`/vetvisits/${petId}/upcoming`);
+    return res.data;
+  },
+
+  /** Get overdue follow-ups */
+  getOverdueFollowups: async (petId: string): Promise<VetVisitListResponse> => {
+    const res = await api.get(`/vetvisits/${petId}/overdue-follow-ups`);
+    return res.data;
+  },
+
+  /** Get cost summary */
+  getCostSummary: async (petId: string): Promise<{ success: boolean; data: any }> => {
+    const res = await api.get(`/vetvisits/${petId}/cost-summary`);
     return res.data;
   },
 

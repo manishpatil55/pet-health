@@ -497,7 +497,7 @@ const PetProfile = () => {
   const schedule = scheduleData?.data;
   const records = historyData?.data || [];
   const vetVisits = vetData?.data ?? [];
-  const weights = weightData ?? [];
+  const weights = weightData?.data ?? [];
 
   // Compute dewormings array for OverviewBento (expects { nextDueDate, medicineName })
   const dewormings: any[] = (() => {

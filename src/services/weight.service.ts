@@ -1,18 +1,58 @@
+import api from './api';
 import type { WeightEntry } from '@/types';
-import { mockWeightEntries } from '@/data/mockData';
+
+interface WeightResponse { success: boolean; data: WeightEntry }
+interface WeightListResponse { success: boolean; data: WeightEntry[] }
 
 export const weightService = {
-  getAll: async (petId: string): Promise<WeightEntry[]> => {
-    await new Promise((r) => setTimeout(r, 400));
-    return mockWeightEntries.filter((w) => w.pet === petId);
+  /** Get all weight logs for a pet */
+  getAll: async (petId: string): Promise<WeightListResponse> => {
+    const res = await api.get(`/weightlogs/${petId}`);
+    return res.data;
   },
 
-  create: async (data: Omit<WeightEntry, '_id'>): Promise<WeightEntry> => {
-    await new Promise((r) => setTimeout(r, 400));
-    return { ...data, _id: `w-${Date.now()}` };
+  /** Get the latest weight for a pet */
+  getLatest: async (petId: string): Promise<WeightResponse> => {
+    const res = await api.get(`/weightlogs/${petId}/latest`);
+    return res.data;
   },
 
-  delete: async (_id: string): Promise<void> => {
-    await new Promise((r) => setTimeout(r, 300));
+  /** Get weight statistics for a pet */
+  getStats: async (petId: string): Promise<{ success: boolean; data: any }> => {
+    const res = await api.get(`/weightlogs/${petId}/stats`);
+    return res.data;
+  },
+
+  /** Get a single weight log */
+  getById: async (petId: string, logId: string): Promise<WeightResponse> => {
+    const res = await api.get(`/weightlogs/${petId}/${logId}`);
+    return res.data;
+  },
+
+  /** Add a weight log */
+  create: async (data: {
+    petId: string;
+    weight: number;
+    unit: string;
+    recordedDate: string;
+    notes?: string;
+  }): Promise<WeightResponse> => {
+    const res = await api.post('/weightlogs', data);
+    return res.data;
+  },
+
+  /** Update a weight log */
+  update: async (
+    logId: string,
+    data: { weight?: number; notes?: string },
+  ): Promise<WeightResponse> => {
+    const res = await api.patch(`/weightlogs/${logId}`, data);
+    return res.data;
+  },
+
+  /** Delete a weight log */
+  delete: async (logId: string): Promise<{ success: boolean; message: string }> => {
+    const res = await api.delete(`/weightlogs/${logId}`);
+    return res.data;
   },
 };

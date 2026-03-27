@@ -73,11 +73,11 @@ export const mockVetVisits: VetVisit[] = [
 ];
 
 export const mockWeightEntries: WeightEntry[] = [
-  { _id: 'w-1', pet: 'pet-1', date: '2024-10-05', weight: 26.8, unit: 'kg' },
-  { _id: 'w-2', pet: 'pet-1', date: '2024-11-12', weight: 27.2, unit: 'kg' },
-  { _id: 'w-3', pet: 'pet-1', date: '2024-12-08', weight: 27.6, unit: 'kg' },
-  { _id: 'w-4', pet: 'pet-1', date: '2025-01-05', weight: 27.9, unit: 'kg' },
-  { _id: 'w-5', pet: 'pet-1', date: '2025-01-28', weight: 28.0, unit: 'kg' },
-  { _id: 'w-6', pet: 'pet-1', date: '2025-02-18', weight: 28.3, unit: 'kg' },
-  { _id: 'w-7', pet: 'pet-1', date: '2025-03-10', weight: 28.5, unit: 'kg' },
+  { _id: 'w-1', petId: 'pet-1', recordedDate: '2024-10-05', weight: 26.8, unit: 'kg' },
+  { _id: 'w-2', petId: 'pet-1', recordedDate: '2024-11-12', weight: 27.2, unit: 'kg' },
+  { _id: 'w-3', petId: 'pet-1', recordedDate: '2024-12-08', weight: 27.6, unit: 'kg' },
+  { _id: 'w-4', petId: 'pet-1', recordedDate: '2025-01-05', weight: 27.9, unit: 'kg' },
+  { _id: 'w-5', petId: 'pet-1', recordedDate: '2025-01-28', weight: 28.0, unit: 'kg' },
+  { _id: 'w-6', petId: 'pet-1', recordedDate: '2025-02-18', weight: 28.3, unit: 'kg' },
+  { _id: 'w-7', petId: 'pet-1', recordedDate: '2025-03-10', weight: 28.5, unit: 'kg' },
 ];

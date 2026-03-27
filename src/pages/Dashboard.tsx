@@ -325,7 +325,7 @@ const Dashboard = () => {
   const schedule = scheduleData?.data;
   const records = historyData?.data || [];
   const vetVisits = vetData?.data ?? [];
-  const weights = weightData ?? [];
+  const weights = weightData?.data ?? [];
 
   // ── Derived data (unchanged from Doc 15) ──
   const overdueVaccinations = useMemo(

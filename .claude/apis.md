@@ -1,141 +1,88 @@
 # Authentication APIs
 
-Base URL: `http://localhost:5000/api/v1` (Note: we use dynamic `VITE_API_BASE_URL` in our code)
+Base URL: `http://localhost:5000/api/v1` (dynamic via `VITE_API_BASE_URL`)
 
-## 1. Sign up
-- **Endpoint**: `POST /auth/signup/`
-- **Body**: `{ "name": "test", "email": "test@gmail.com", "password": "test123456" }`
-- **Response**: No response body (200 OK or 201 Created presumably).
-
-## 2. Login
-- **Endpoint**: `POST /auth/login/`
-- **Body**: `{ "email": "test@gmail.com", "password": "test123456" }`
-- **Response**: No response body (tokens are set via HttpOnly cookies? Wait, the previous API doc said "You will receive accessToken and refreshToken in the JSON response body" but this one says "No response body". Need to be careful here - if tokens are in cookies, we don't need to manually extract).
-
-## 3. Refresh Token
-- **Endpoint**: `POST /auth/refresh-token/`
-- **Response**: No response body.
-
-## 4. Logout
-- **Endpoint**: `POST /auth/logout/`
-- **Headers**: `Authorization: Bearer <token>`
-- **Response**: No response body.
-
-## 5. Logout All
-- **Endpoint**: `POST /auth/logout-all/`
-- **Headers**: `Authorization: Bearer <token>`
-- **Response**: No response body.
-
-## 6. Change Password
-- **Endpoint**: `POST /auth/change-password/`
-- **Headers**: `Authorization: Bearer <token>`
-- **Body**: `{ "currentPassword": "test123456", "newPassword": "newtest123456" }`
-- **Response**: No response body.
-
-## 7. Delete Account
-- **Endpoint**: `DELETE /auth/delete-account/`
-- **Headers**: `Authorization: Bearer <token>`
-- **Response**: No response body.
-
-## 8. Resend OTP
-- **Endpoint**: `POST /auth/resend-otp/`
-- **Body**: `{ "email": "test@gmail.com" }`
-- **Response**: No response body.
-
-## 9. Google Login
-- **Endpoint**: `POST /auth/google/`
-- **Body**: `{ "idToken": "<firebase_id_token>" }`
-- **Response**: No response body.
-
-## 10. Forgot Password
-- **Endpoint**: `POST /auth/forgot-password/`
-- **Body**: `{ "email": "test@gmail.com" }`
-- **Response**: No response body.
-
-## 11. Reset Password
-- **Endpoint**: `POST /auth/reset-password/`
-- **Body**: `{ "email": "email@gmail.com", "token": "<reset_token_from_email_link>", "newPassword": "NewPass1234" }`
-- **Response**: No response body.
-
-## 12. Verify Email
-- **Endpoint**: `POST /auth/verify-email/`
-- **Body**: `{ "email": "test@gmail.com", "otp": "965834" }`
-- **Response**: No response body.
+## Auth
+- `POST /auth/signup/` — `{ name, email, password }`
+- `POST /auth/login/` — `{ email, password }`
+- `POST /auth/refresh-token/`
+- `POST /auth/logout/`
+- `POST /auth/logout-all/`
+- `POST /auth/change-password/` — `{ currentPassword, newPassword }`
+- `DELETE /auth/delete-account/`
+- `POST /auth/resend-otp/` — `{ email }`
+- `POST /auth/google/` — `{ idToken }`
+- `POST /auth/forgot-password/` — `{ email }`
+- `POST /auth/reset-password/` — `{ email, token, newPassword }`
+- `POST /auth/verify-email/` — `{ email, otp }`
 
 # Pet APIs
-
-## 1. Get all pets
-- **Endpoint**: `GET /pets/`
-- **Headers**: `Authorization: Bearer <token>`
-- **Response**: Array of pets or `{ success: true, data: [...] }`
-
-## 2. Create pet
-- **Endpoint**: `POST /pets/`
-- **Headers**: `Authorization: Bearer <token>`
-- **Body**: 
-```json
-{
-  "name": "Buddy",
-  "type": "Dog",
-  "breed": "Labrador",
-  "gender": "Male",
-  "dateOfBirth": "2022-01-15",
-  "initialWeight": 10,
-  "photo": "url_or_base64",
-  "microchipId": "123ABC"
-}
-```
-
-## 3. Get pet by id
-- **Endpoint**: `GET /pets/{{id}}/`
-- **Headers**: `Authorization: Bearer <token>`
-
-## 4. Update pet
-- **Endpoint**: `PUT /pets/{{id}}/`
-- **Headers**: `Authorization: Bearer <token>`
-- **Body**: 
-```json
-{
-  "name": "Max",
-  "breed": "Poodle"
-}
-```
-
-## 5. Delete pet
-- **Endpoint**: `DELETE /pets/{{id}}/`
-- **Headers**: `Authorization: Bearer <token>`
+- `GET /pets/` — Get all pets
+- `POST /pets/` — Create pet `{ name, type, breed, gender, dateOfBirth, initialWeight, photo, microchipId }`
+- `GET /pets/:id/` — Get pet by id
+- `PUT /pets/:id/` — Update pet
+- `DELETE /pets/:id/` — Delete pet
 
 # Vaccination APIs
 
-## 1. Vaccination Templates (Admin / Setup)
-- `POST /vaccinations/templates/` - Create template
-- `GET /vaccinations/templates/` - Get all templates
-- `PUT /vaccinations/templates/:id` - Update template
-- `DELETE /vaccinations/templates/:id` - Delete template
+## Templates
+- `POST /vaccinations/templates/` — `{ petType, vaccineName, isCoreVaccine, recommendedAgeWeeks, boosterIntervalWeeks, description }`
+- `GET /vaccinations/templates/`
+- `PUT /vaccinations/templates/:id`
+- `DELETE /vaccinations/templates/:id`
 
-## 2. Vaccination Records (Core CRUD)
-- `POST /vaccinations/` - Create vaccination record
-- `GET /vaccinations/pet/:id/` - Get all vaccinations by Pet ID
-- `GET /vaccinations/:id/` - Get vaccination by ID
-- `PUT /vaccinations/:id/` - Update vaccination record
-- `DELETE /vaccinations/:id/` - Delete vaccination record
+## Records
+- `POST /vaccinations/` — `{ petId, vaccineName, dateAdministered, nextDueDate, veterinarianName, clinicName, notes, documents }`
+- `GET /vaccinations/:id/` — Get by ID
+- `GET /vaccinations/pet/:petId/` — Get all by pet
+- `PUT /vaccinations/:id/` — Update
+- `DELETE /vaccinations/:id/` — Delete
 
-## 3. Vaccination Timeline & Actions
-- `GET /vaccinations/pet/:id/upcoming/` - Get upcoming vaccinations
-- `GET /vaccinations/pet/:id/overdue/` - Get overdue vaccinations
-- `PATCH /vaccinations/:id/complete/` - Mark vaccination as complete
+## Timeline
+- `GET /vaccinations/pet/:petId/upcoming/`
+- `GET /vaccinations/pet/:petId/overdue/`
+- `PATCH /vaccinations/:id/complete/`
+
+# Medication APIs
+- `POST /medications/` — `{ pet, medicineName, dosage, frequency, customIntervalHours, startDate, endDate, notes }`
+- `GET /medications/pet/:petId/` — Get all for pet
+- `GET /medications/:id/` — Get by ID (with progress)
+- `PATCH /medications/:id/` — Update
+- `DELETE /medications/:id/` — Delete
+- `GET /medications/:id/doses/` — Get dose logs
+- `POST /medications/dose/:doseId/` — Mark dose taken
+- `PATCH /medications/dose/:doseId/` — Update dose `{ status, takenTime }`
 
 # Deworming APIs
 
-## 1. Deworming Schedules
-- `POST /deworming/schedules/` - Create Schedule 
-- `GET /deworming/schedules/:petId/` - Get Schedule for a Pet 
-- `PATCH /deworming/schedules/:scheduleId/` - Update Schedule
-- `DELETE /deworming/schedules/:scheduleId/` - Deactivate Schedule
+## Schedules
+- `POST /deworming/schedules/` — `{ petId, frequency }`
+- `GET /deworming/schedules/:petId/`
+- `PATCH /deworming/schedules/:scheduleId/`
+- `DELETE /deworming/schedules/:scheduleId/`
 
-## 2. Deworming Records
-- `POST /deworming/records/` - Add Deworming Record
-- `GET /deworming/records/:petId/history` - Get Deworming History for a Pet
-- `GET /deworming/records/record/:recordId/` - Get Single Record
-- `PATCH /deworming/records/record/:recordId/` - Update Record
-- `DELETE /deworming/records/record/:recordId/` - Delete Record
+## Records
+- `POST /deworming/records/` — `{ petId, dateAdministered, productName, administeredBy, notes }`
+- `GET /deworming/records/:petId/history`
+- `GET /deworming/records/record/:recordId/`
+- `PATCH /deworming/records/record/:recordId/`
+- `DELETE /deworming/records/record/:recordId/`
+
+# Weight Log APIs
+- `POST /weightlogs/` — `{ petId, weight, unit, recordedDate, notes }`
+- `GET /weightlogs/:petId/` — Get all logs for pet
+- `GET /weightlogs/:petId/latest/` — Get latest weight
+- `GET /weightlogs/:petId/stats/` — Get weight stats
+- `GET /weightlogs/:petId/:logId/` — Get single log
+- `PATCH /weightlogs/:logId/` — Update `{ weight, notes }`
+- `DELETE /weightlogs/:logId/` — Delete
+
+# Vet Visit APIs
+- `POST /vetvisits/` — `{ petId, visitDate, visitType, clinicName, veterinarianName, diagnosis, treatmentDetails, cost, currency, notes, followUpDate }`
+- `GET /vetvisits/:petId/` — Get all (supports `?visitType=&from=&to=`)
+- `GET /vetvisits/:petId/upcoming/` — Upcoming visits
+- `GET /vetvisits/:petId/overdue-follow-ups/` — Overdue follow-ups
+- `GET /vetvisits/:petId/cost-summary/` — Cost summary
+- `GET /vetvisits/visit/:visitId/` — Get single
+- `PATCH /vetvisits/visit/:visitId/` — Update
+- `DELETE /vetvisits/visit/:visitId/` — Delete

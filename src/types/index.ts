@@ -105,14 +105,18 @@ export interface DewormingRecord {
 export interface VetVisit {
   _id: string;
   pet: string;
+  petId?: string;
   visitDate: string;
+  visitType?: 'routine' | 'follow-up' | 'emergency' | 'specialist' | string;
   clinicName: string;
   veterinarianName: string;
   diagnosis: string;
   treatment: string;
   treatmentDetails?: string;
   cost?: number;
+  currency?: string;
   notes?: string;
+  followUpDate?: string;
   documents?: VaccinationDocument[];
 }
 
@@ -122,10 +126,14 @@ export type WeightUnit = 'kg' | 'lbs';
 
 export interface WeightEntry {
   _id: string;
-  pet: string;
-  date: string;
+  petId: string;
+  recordedDate: string;
   weight: number;
   unit: WeightUnit;
+  notes?: string;
+  // Legacy fields kept for backward compat with mock data
+  pet?: string;
+  date?: string;
 }
 
 // ─── API ────────────────────────────────────────────────────

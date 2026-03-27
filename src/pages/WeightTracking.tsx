@@ -11,6 +11,7 @@ import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { SkeletonLoader } from '@/components/ui/SkeletonLoader';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { AddWeightModal } from '@/components/modals/AddWeightModal';
 import { usePet } from '@/hooks/usePets';
 import { useWeightEntries } from '@/hooks/useWeight';
 import { formatDate } from '@/utils/dateUtils';
@@ -21,24 +22,25 @@ const WeightTracking = () => {
   const { id: petId } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [range, setRange] = useState<Range>('6M');
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
   const { data: petData } = usePet(petId!);
-  const { data: entries, isLoading } = useWeightEntries(petId!);
+  const { data: weightData, isLoading } = useWeightEntries(petId!);
 
   const pet = petData?.data;
-  const weights = entries ?? [];
+  const weights = weightData?.data ?? [];
 
   const rangeMonths: Record<Range, number> = { '1M': 1, '3M': 3, '6M': 6, '1Y': 12 };
 
   const filteredWeights = useMemo(() => {
     const cutoff = subMonths(new Date(), rangeMonths[range]);
     return weights
-      .filter((w) => isAfter(new Date(w.date), cutoff))
-      .sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+      .filter((w) => isAfter(new Date(w.recordedDate), cutoff))
+      .sort((a, b) => new Date(a.recordedDate).getTime() - new Date(b.recordedDate).getTime());
   }, [weights, range]);
 
   const chartData = filteredWeights.map((w) => ({
-    date: format(new Date(w.date), 'MMM d'),
+    date: format(new Date(w.recordedDate), 'MMM d'),
     weight: w.weight,
   }));
 
@@ -54,7 +56,7 @@ const WeightTracking = () => {
           <h1 className="text-xl font-bold text-[#2F3A3A]">Weight Tracking</h1>
           {pet && <p className="text-sm text-[#7A8A8A]">{pet.name}</p>}
         </div>
-        <Button size="sm" className="gap-1"><Plus className="h-4 w-4" /> Add Weight</Button>
+        <Button size="sm" className="gap-1" onClick={() => setIsModalOpen(true)}><Plus className="h-4 w-4" /> Add Weight</Button>
       </div>
 
       {isLoading ? (
@@ -64,6 +66,8 @@ const WeightTracking = () => {
           icon={WeightIcon}
           title="No weight data"
           description="Start recording your pet's weight to track trends over time."
+          actionLabel="Record Weight"
+          onAction={() => setIsModalOpen(true)}
         />
       ) : (
         <>
@@ -75,7 +79,7 @@ const WeightTracking = () => {
                 {latest!.weight}
                 <span className="text-base font-normal text-[#7A8A8A] ml-1">{latest!.unit}</span>
               </p>
-              <p className="text-xs text-[#7A8A8A] mt-1">{formatDate(latest!.date)}</p>
+              <p className="text-xs text-[#7A8A8A] mt-1">{formatDate(latest!.recordedDate)}</p>
             </div>
             {change && (
               <div className={`flex items-center gap-1 text-sm font-medium pb-2 ${
@@ -143,13 +147,24 @@ const WeightTracking = () => {
             <div className="divide-y divide-[#E6EEEE]">
               {[...weights].reverse().map((w) => (
                 <div key={w._id} className="flex items-center justify-between py-2.5 text-sm">
-                  <span className="text-[#7A8A8A]">{formatDate(w.date)}</span>
+                  <div>
+                    <span className="text-[#7A8A8A]">{formatDate(w.recordedDate)}</span>
+                    {w.notes && <span className="text-xs text-[#7A8A8A] ml-2 italic">— {w.notes}</span>}
+                  </div>
                   <span className="font-medium text-[#2F3A3A]">{w.weight} {w.unit}</span>
                 </div>
               ))}
             </div>
           </Card>
         </>
+      )}
+
+      {petId && (
+        <AddWeightModal
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
+          petId={petId}
+        />
       )}
     </motion.div>
   );
