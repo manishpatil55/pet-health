@@ -8,6 +8,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { motion } from 'framer-motion';
+import type { Variants } from 'framer-motion';
 import {
   User, Lock, Bell, Palette, Database, AlertTriangle,
   Eye, EyeOff, LogOut, Trash2, Moon, Sun, Shield, Download,
@@ -41,11 +42,11 @@ const passwordSchema = z
 
 type PasswordFormData = z.infer<typeof passwordSchema>;
 
-const fadeUp = {
+const fadeUp: Variants = {
   hidden: { opacity: 0, y: 18 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } },
 };
-const stagger = { hidden: {}, visible: { transition: { staggerChildren: 0.08 } } };
+const stagger: Variants = { hidden: {}, visible: { transition: { staggerChildren: 0.07 } } };
 
 const Settings = () => {
   const navigate = useNavigate();

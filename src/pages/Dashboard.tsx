@@ -27,8 +27,8 @@ import { useVaccinations } from '@/hooks/useVaccinations';
 import { useMedications } from '@/hooks/useMedications';
 import { useDewormingSchedule, useDewormingHistory } from '@/hooks/useDeworming';
 import { useVetVisits } from '@/hooks/useVetVisits';
-import { format, subMonths, isBefore } from 'date-fns';
 import { useWeightEntries } from '@/hooks/useWeight';
+import { subMonths, isBefore } from 'date-fns';
 import { useAuthStore } from '@/store/authStore';
 import { usePetStore } from '@/store/petStore';
 
@@ -418,7 +418,7 @@ const Dashboard = () => {
   );
   const sortedWeights = useMemo(
     () => [...weights].sort((a: any, b: any) => 
-      new Date(a.recordedDate || a.date).getTime() - new Date(b.recordedDate || b.date).getTime()),
+      new Date(a.recordedDate || a.date || 0).getTime() - new Date(b.recordedDate || b.date || 0).getTime()),
     [weights]
   );
   const latestWeight = sortedWeights.length > 0 ? sortedWeights[sortedWeights.length - 1] : null;
@@ -426,13 +426,12 @@ const Dashboard = () => {
   // Monthly trend calculation
   const monthAgo = subMonths(new Date(), 1);
   const monthAgoRecord = latestWeight 
-    ? [...sortedWeights].reverse().find(w => isBefore(new Date(w.recordedDate || w.date), monthAgo)) || sortedWeights[sortedWeights.length - 2]
+    ? [...sortedWeights].reverse().find(w => isBefore(new Date(w.recordedDate || w.date || 0), monthAgo)) || sortedWeights[sortedWeights.length - 2]
     : null;
 
   const weightChange = latestWeight && monthAgoRecord
     ? ((latestWeight.weight - monthAgoRecord.weight) / monthAgoRecord.weight * 100).toFixed(1)
     : null;
-  const isMonthComp = monthAgoRecord && isBefore(new Date(monthAgoRecord.recordedDate || monthAgoRecord.date), monthAgo);
 
   // ── Loading ──
   if (petsLoading) {

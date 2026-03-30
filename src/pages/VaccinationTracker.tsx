@@ -5,8 +5,8 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import type { Variants } from 'framer-motion';
 import { ArrowLeft, Plus, Syringe, Zap, Check, Trash2, ShieldCheck, AlertTriangle, Clock } from 'lucide-react';
-import toast from 'react-hot-toast';
 
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -28,11 +28,11 @@ import type { VaccinationStatus } from '@/types';
 
 type Filter = 'all' | VaccinationStatus;
 
-const fadeUp = {
+const fadeUp: Variants = {
   hidden: { opacity: 0, y: 18 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } },
 };
-const stagger = { hidden: {}, visible: { transition: { staggerChildren: 0.07 } } };
+const stagger: Variants = { hidden: {}, visible: { transition: { staggerChildren: 0.07 } } };
 
 const statusIcon: Record<string, React.ElementType> = {
   completed: ShieldCheck,

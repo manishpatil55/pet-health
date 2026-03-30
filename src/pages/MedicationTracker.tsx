@@ -5,6 +5,7 @@
 import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
+import type { Variants } from 'framer-motion';
 import { ArrowLeft, Plus, Pill, Trash2, StopCircle, Calendar, Clock, Activity } from 'lucide-react';
 
 import { Card } from '@/components/ui/Card';
@@ -24,11 +25,11 @@ const isActiveMed = (m: any) => {
   return status === 'active' || status === 'ongoing';
 };
 
-const fadeUp = {
+const fadeUp: Variants = {
   hidden: { opacity: 0, y: 18 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } },
 };
-const stagger = { hidden: {}, visible: { transition: { staggerChildren: 0.07 } } };
+const stagger: Variants = { hidden: {}, visible: { transition: { staggerChildren: 0.07 } } };
 
 const MedicationTracker = () => {
   const { id: petId } = useParams<{ id: string }>();

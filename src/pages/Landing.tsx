@@ -15,11 +15,12 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useInView, AnimatePresence } from 'framer-motion';
+import type { Variants } from 'framer-motion';
 import {
-  PawPrint, Shield, CalendarCheck, FileText, TrendingUp,
-  ArrowRight, Star, Check, Minus, Lock, Cloud, Smartphone,
-  Share2, Download, Menu, X, Play, Bell, Scale, Users,
-  Heart, Mail, Globe, Zap, ChevronRight, Activity,
+  PawPrint, Shield, FileText, TrendingUp,
+  Star, Check, Minus, Lock, Cloud, Smartphone,
+  Share2, Download, Menu, X, Play, Bell, Users,
+  Heart, Mail, Globe, Zap, Activity,
 } from 'lucide-react';
 import { ROUTES } from '@/constants/routes';
 import { Button } from '@/components/ui/Button';
@@ -34,18 +35,17 @@ const IMG = {
 } as const;
 
 // ─── Animation Variants ───────────────────────────────────────────────────────
-const fadeUp = {
+const fadeUp: Variants = {
   hidden: { opacity: 0, y: 28 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.65, ease: [0.16, 1, 0.3, 1] } },
 };
-const staggerContainer = {
+const staggerContainer: Variants = {
   hidden: {},
   visible: { transition: { staggerChildren: 0.11, delayChildren: 0.05 } },
 };
 const VP = { once: true, margin: '-60px' } as const;
 
 // ─── Shared types ─────────────────────────────────────────────────────────────
-interface Feature { icon: React.ElementType; title: string; description: string; accent: string }
 interface Testimonial { initial: string; name: string; sub: string; text: string; dark?: boolean }
 interface Plan { name: string; price: string; period: string; badge?: string; features: { yes: boolean; text: string }[]; cta: string; highlight?: boolean }
 

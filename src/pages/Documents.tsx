@@ -4,7 +4,8 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { FileText, Upload, Image, File, Search, FolderOpen } from 'lucide-react';
+import type { Variants } from 'framer-motion';
+import { Upload, Image, File, Search, FolderOpen } from 'lucide-react';
 
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -31,11 +32,11 @@ const mockDocuments: MockDocument[] = [
   { id: '4', name: 'Blood Work Results.pdf', type: 'pdf', uploadedAt: '2024-11-20', petName: 'Buddy', url: '#' },
 ];
 
-const fadeUp = {
+const fadeUp: Variants = {
   hidden: { opacity: 0, y: 18 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } },
 };
-const stagger = { hidden: {}, visible: { transition: { staggerChildren: 0.06 } } };
+const stagger: Variants = { hidden: {}, visible: { transition: { staggerChildren: 0.06 } } };
 
 const Documents = () => {
   const [petFilter, setPetFilter] = useState('all');

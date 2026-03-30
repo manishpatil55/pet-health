@@ -5,6 +5,7 @@
 import { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
+import type { Variants } from 'framer-motion';
 import { ArrowLeft, Plus, Weight as WeightIcon, TrendingUp, TrendingDown, Minus, Trash2, Scale } from 'lucide-react';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer,
@@ -23,7 +24,7 @@ import { formatDate } from '@/utils/dateUtils';
 
 type Range = '1M' | '3M' | '6M' | '1Y';
 
-const fadeUp = {
+const fadeUp: Variants = {
   hidden: { opacity: 0, y: 18 },
   visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } },
 };
@@ -46,17 +47,17 @@ const WeightTracking = () => {
 
   const sortedWeights = useMemo(() => {
     return [...weights].sort((a, b) => 
-      new Date(a.recordedDate || a.date).getTime() - new Date(b.recordedDate || b.date).getTime());
+      new Date(a.recordedDate || a.date || 0).getTime() - new Date(b.recordedDate || b.date || 0).getTime());
   }, [weights]);
 
   const filteredWeights = useMemo(() => {
     const cutoff = subMonths(new Date(), rangeMonths[range]);
     return sortedWeights
-      .filter((w) => isAfter(new Date(w.recordedDate), cutoff));
+      .filter((w) => isAfter(new Date(w.recordedDate || w.date || 0), cutoff));
   }, [sortedWeights, range]);
 
   const chartData = filteredWeights.map((w) => ({
-    date: format(new Date(w.recordedDate), 'MMM d'),
+    date: format(new Date(w.recordedDate || w.date || 0), 'MMM d'),
     weight: w.weight,
   }));
 
@@ -65,13 +66,13 @@ const WeightTracking = () => {
   // Find record closest to 30 days ago
   const monthAgo = subMonths(new Date(), 1);
   const monthAgoRecord = latest 
-    ? [...sortedWeights].reverse().find(w => isBefore(new Date(w.recordedDate), monthAgo)) || sortedWeights[sortedWeights.length - 2]
+    ? [...sortedWeights].reverse().find(w => isBefore(new Date(w.recordedDate || w.date || 0), monthAgo)) || sortedWeights[sortedWeights.length - 2]
     : null;
 
   const change = latest && monthAgoRecord 
     ? ((latest.weight - monthAgoRecord.weight) / monthAgoRecord.weight * 100).toFixed(1)
     : null;
-  const isMonthComp = monthAgoRecord && isBefore(new Date(monthAgoRecord.recordedDate), monthAgo);
+  const isMonthComp = monthAgoRecord && isBefore(new Date(monthAgoRecord.recordedDate || monthAgoRecord.date || 0), monthAgo);
 
   return (
     <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
