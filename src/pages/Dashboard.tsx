@@ -27,6 +27,7 @@ import { useVaccinations } from '@/hooks/useVaccinations';
 import { useMedications } from '@/hooks/useMedications';
 import { useDewormingSchedule, useDewormingHistory } from '@/hooks/useDeworming';
 import { useVetVisits } from '@/hooks/useVetVisits';
+import { format, subMonths, isBefore } from 'date-fns';
 import { useWeightEntries } from '@/hooks/useWeight';
 import { useAuthStore } from '@/store/authStore';
 import { usePetStore } from '@/store/petStore';
@@ -85,11 +86,13 @@ function BC({
     <div
       className={`rounded-3xl p-7 flex flex-col ${className}`}
       style={{
-        background: dark ? C.primDk : C.surf,
+        background: dark ? C.primDk : 'rgba(255, 255, 255, 0.65)',
+        backdropFilter: dark ? 'none' : 'blur(20px)',
+        WebkitBackdropFilter: dark ? 'none' : 'blur(20px)',
         boxShadow: dark
           ? '0 8px 32px rgba(0,68,66,.22)'
-          : '0 2px 20px rgba(19,29,30,.06)',
-        border: dark ? 'none' : '1px solid rgba(189,201,199,.22)',
+          : '0 8px 32px rgba(19,29,30,.04)',
+        border: dark ? '1px solid rgba(255,255,255,0.05)' : '1px solid rgba(255, 255, 255, 0.5)',
         ...style,
       }}
     >
@@ -172,40 +175,79 @@ function HealthRing({ score }: { score: number }) {
           {score}
         </span>
         <span
-          className="text-[9px] font-bold uppercase tracking-widest mt-1"
+          className="text-[9px] font-bold uppercase tracking-widest mt-1 opacity-60"
           style={{ color: C.onSV }}
         >
-          / 100
+          {score === 100 ? 'Optimal' : 'Needs Attention'}
         </span>
       </div>
     </div>
   );
 }
 
-// ─── Mini weight bar chart ────────────────────────────────────────────────────
+// ─── Mini weight Bezier chart ────────────────────────────────────────────────
 function WeightBars({ weights }: { weights: any[] }) {
   const slice = weights.slice(-6);
-  const maxW = Math.max(...slice.map((w: any) => w.weight), 1);
-  const bars = slice.length > 0
+  const data = slice.length >= 2
     ? slice
-    : [{ weight: 0.6 }, { weight: 0.65 }, { weight: 0.55 }, { weight: 0.75 }, { weight: 0.85 }].map(s => ({ weight: maxW * s.weight }));
+    : [
+        { weight: 12, date: '2026-03-01' },
+        { weight: 14, date: '2026-03-15' },
+        { weight: 13, date: '2026-03-30' },
+      ];
+
+  const wValues = data.map(d => d.weight);
+  const rawMin = Math.min(...wValues);
+  const rawMax = Math.max(...wValues);
+  const diff = rawMax - rawMin;
+  
+  // Tighter window for better curve visualization
+  const minW = rawMin - (diff > 0 ? diff * 0.4 : 2);
+  const maxW = rawMax + (diff > 0 ? diff * 0.4 : 2);
+
+  const W = 300;
+  const H = 80;
+  const PAD_X = 10;
+  const PAD_Y = 15;
+
+  const getPos = (val: number, i: number) => ({
+    x: PAD_X + (i / (data.length - 1)) * (W - PAD_X * 2),
+    y: (H - PAD_Y) - ((val - minW) / (maxW - minW || 1)) * (H - PAD_Y * 1.8),
+  });
+
+  const points = wValues.map((v, i) => getPos(v, i));
+
+  // Bezier curve with dramatic control points
+  const pathStr = points.reduce((acc, p, i, a) => {
+    if (i === 0) return `M ${p.x},${p.y}`;
+    const prev = a[i - 1];
+    const dx = p.x - prev.x;
+    return `${acc} C ${prev.x + dx * 0.4},${prev.y} ${p.x - dx * 0.4},${p.y} ${p.x},${p.y}`;
+  }, '');
+
+  const areaStr = `${pathStr} L ${points[points.length - 1].x},${H} L ${points[0].x},${H} Z`;
 
   return (
-    <div className="flex items-end gap-2 h-24 mt-auto">
-      {bars.map((w: any, i: number) => {
-        const pct = Math.max(10, (w.weight / maxW) * 100);
-        const last = i === bars.length - 1;
-        return (
-          <motion.div
-            key={i}
-            className="flex-1 rounded-full"
-            style={{ background: last ? SIG : C.dim }}
-            initial={{ height: 0 }}
-            animate={{ height: `${pct}%` }}
-            transition={{ duration: 0.6, delay: i * 0.07, ease: [0.16, 1, 0.3, 1] }}
-          />
-        );
-      })}
+    <div className="relative w-full h-24 mt-auto overflow-visible pt-2 rounded-xl">
+      <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-full overflow-visible" preserveAspectRatio="none">
+        <defs>
+          <linearGradient id="weightGradD" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor={C.primC} stopOpacity={0.2} />
+            <stop offset="100%" stopColor={C.primC} stopOpacity={0.0} />
+          </linearGradient>
+        </defs>
+
+        <motion.path d={areaStr} fill="url(#weightGradD)"
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.8 }} />
+
+        <motion.path d={pathStr} fill="none" stroke={C.prim} strokeWidth="3" strokeLinecap="round"
+          initial={{ pathLength: 0 }} animate={{ pathLength: 1 }} transition={{ duration: 1.2, ease: "easeInOut" }} />
+
+        {points.map((p, i) => (
+          <motion.circle key={i} cx={p.x} cy={p.y} r="3.5" fill={C.surf} stroke={C.prim} strokeWidth="2"
+            initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.8 + i * 0.1, type: "spring" }} />
+        ))}
+      </svg>
     </div>
   );
 }
@@ -258,20 +300,22 @@ function QAction({
     <motion.div
       variants={fadeUp}
       transition={{ delay }}
-      whileHover={{ y: -4, boxShadow: '0 16px 40px rgba(0,106,103,.2)' }}
+      whileHover={{ y: -4, scale: 1.02 }}
       whileTap={{ scale: 0.97 }}
     >
       <Link to={to} className="block">
         <div
           className="flex flex-col items-center gap-3 p-6 rounded-2xl transition-all duration-300 cursor-pointer group"
-          style={{ background: C.surf, border: `1px solid rgba(189,201,199,.22)` }}
+          style={{ background: C.surf, border: `1px solid rgba(189,201,199,.3)`, boxShadow: '0 4px 20px rgba(0,0,0,.03)' }}
           onMouseEnter={e => {
             (e.currentTarget as HTMLDivElement).style.background = C.prim;
             (e.currentTarget as HTMLDivElement).style.borderColor = 'transparent';
+            (e.currentTarget as HTMLDivElement).style.boxShadow = '0 12px 30px rgba(0,106,103,.2)';
           }}
           onMouseLeave={e => {
             (e.currentTarget as HTMLDivElement).style.background = C.surf;
-            (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(189,201,199,.22)';
+            (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(189,201,199,.3)';
+            (e.currentTarget as HTMLDivElement).style.boxShadow = '0 4px 20px rgba(0,0,0,.03)';
           }}
         >
           <div
@@ -314,7 +358,7 @@ const Dashboard = () => {
   const selectedPet = pets.find(p => p._id === selectedPetId);
 
   const { data: vaccData, isLoading: vaccLoading } = useVaccinations(selectedPetId);
-  const { data: medsData } = useMedications(selectedPetId);
+  const { data: medsData, isLoading: medsLoading } = useMedications(selectedPetId);
   const { data: scheduleData } = useDewormingSchedule(selectedPetId);
   const { data: historyData } = useDewormingHistory(selectedPetId);
   const { data: vetData } = useVetVisits(selectedPetId);
@@ -337,7 +381,10 @@ const Dashboard = () => {
     [vaccinations],
   );
   const activeMedications = useMemo(
-    () => medications.filter((m: any) => m.status === 'active'),
+    () => medications.filter((m: any) => {
+      const s = (m.status || '').toLowerCase();
+      return s === 'active' || s === 'ongoing';
+    }),
     [medications],
   );
   const nextDeworming = useMemo(() => {
@@ -369,11 +416,23 @@ const Dashboard = () => {
       : null,
     [vetVisits],
   );
-  const latestWeight = weights.length > 0 ? weights[weights.length - 1] : null;
-  const prevWeight = weights.length > 1 ? weights[weights.length - 2] : null;
-  const weightChange = latestWeight && prevWeight
-    ? ((latestWeight.weight - prevWeight.weight) / prevWeight.weight * 100).toFixed(1)
+  const sortedWeights = useMemo(
+    () => [...weights].sort((a: any, b: any) => 
+      new Date(a.recordedDate || a.date).getTime() - new Date(b.recordedDate || b.date).getTime()),
+    [weights]
+  );
+  const latestWeight = sortedWeights.length > 0 ? sortedWeights[sortedWeights.length - 1] : null;
+
+  // Monthly trend calculation
+  const monthAgo = subMonths(new Date(), 1);
+  const monthAgoRecord = latestWeight 
+    ? [...sortedWeights].reverse().find(w => isBefore(new Date(w.recordedDate || w.date), monthAgo)) || sortedWeights[sortedWeights.length - 2]
     : null;
+
+  const weightChange = latestWeight && monthAgoRecord
+    ? ((latestWeight.weight - monthAgoRecord.weight) / monthAgoRecord.weight * 100).toFixed(1)
+    : null;
+  const isMonthComp = monthAgoRecord && isBefore(new Date(monthAgoRecord.recordedDate || monthAgoRecord.date), monthAgo);
 
   // ── Loading ──
   if (petsLoading) {
@@ -579,7 +638,7 @@ const Dashboard = () => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -10 }}
             transition={{ duration: 0.4 }}
-            className="rounded-3xl p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 mb-5"
+            className="rounded-3xl p-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-5 mb-5 relative overflow-hidden"
             style={{
               background: 'rgba(186,26,26,.06)',
               borderLeft: `6px solid ${C.error}`,
@@ -587,7 +646,13 @@ const Dashboard = () => {
               borderLeftWidth: 6,
             }}
           >
-            <div className="flex items-start sm:items-center gap-5">
+            <motion.div 
+              className="absolute inset-0 z-0"
+              style={{ background: 'radial-gradient(circle at 10% 50%, rgba(186,26,26,0.1), transparent 50%)' }}
+              animate={{ opacity: [0.3, 0.7, 0.3] }}
+              transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+            />
+            <div className="flex items-start sm:items-center gap-5 relative z-10">
               <div
                 className="w-12 h-12 rounded-full flex items-center justify-center flex-shrink-0 shadow-md"
                 style={{ background: C.error }}
@@ -674,7 +739,7 @@ const Dashboard = () => {
               )}
             </div>
           </div>
-          <WeightBars weights={weights} />
+          <WeightBars weights={sortedWeights} />
           <Link to={buildPath(ROUTES.WEIGHT, { id: selectedPetId })}
             className="flex items-center justify-between text-xs font-bold mt-5 pt-4"
             style={{ color: C.prim, borderTop: `1px solid ${C.dim}` }}>
@@ -685,18 +750,24 @@ const Dashboard = () => {
         {/* This Week — upcoming */}
         <BC className="justify-between">
           <SHead icon={CalendarClock} title="This Week" to={buildPath(ROUTES.VACCINATIONS, { id: selectedPetId })} />
-          {vaccLoading ? (
+          {vaccLoading || medsLoading ? (
             <div className="space-y-2">
               {[1, 2].map(i => <div key={i} className="h-10 rounded-xl" style={{ background: C.lo }} />)}
             </div>
           ) : upcomingVaccinations.length === 0 && activeMedications.length === 0 ? (
-            <div className="flex flex-col items-center justify-center flex-1 py-6 text-center gap-2">
-              <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: C.lo }}>
-                <Activity className="h-5 w-5" style={{ color: C.primC }} />
+            <div className="flex flex-col items-center justify-center flex-1 py-6 text-center gap-3">
+              <motion.div 
+                className="w-12 h-12 rounded-full flex items-center justify-center shadow-sm" 
+                style={{ background: '#eaf6f5' }}
+                animate={{ scale: [1, 1.05, 1], rotate: [0, -5, 5, 0] }}
+                transition={{ duration: 3, repeat: Infinity, ease: 'easeInOut' }}
+              >
+                <Activity className="h-6 w-6" style={{ color: C.primC }} />
+              </motion.div>
+              <div>
+                <p className="text-sm font-bold" style={{ color: C.onS }}>All Clear</p>
+                <p className="text-xs font-medium mt-0.5" style={{ color: C.onSV }}>Nothing scheduled for this week</p>
               </div>
-              <p className="text-sm font-medium" style={{ color: C.onSV }}>
-                Nothing due this week 🎉
-              </p>
             </div>
           ) : (
             <div className="space-y-2.5">
@@ -731,9 +802,23 @@ const Dashboard = () => {
         {/* Active medications */}
         <BC className="justify-between">
           <SHead icon={Pill} title="Medications" to={buildPath(ROUTES.MEDICATIONS, { id: selectedPetId })} />
-          {activeMedications.length === 0 ? (
-            <div className="flex flex-col items-center justify-center flex-1 py-6 text-center gap-2">
-              <p className="text-sm font-medium" style={{ color: C.onSV }}>No active medications</p>
+          {medsLoading ? (
+            <div className="space-y-4">
+              {[1, 2, 3].map(i => <div key={i} className="h-4 w-full rounded-md" style={{ background: C.lo }} />)}
+            </div>
+          ) : activeMedications.length === 0 ? (
+            <div className="flex flex-col items-center justify-center flex-1 py-6 text-center gap-3">
+              <motion.div 
+                className="w-12 h-12 rounded-full flex items-center justify-center shadow-sm" 
+                style={{ background: '#eaf6f5' }}
+                whileHover={{ scale: 1.05, rotate: -5 }}
+              >
+                <Pill className="h-6 w-6" style={{ color: C.primC }} />
+              </motion.div>
+              <div>
+                <p className="text-sm font-bold" style={{ color: C.onS }}>No Active Meds</p>
+                <p className="text-xs font-medium mt-0.5" style={{ color: C.onSV }}>Your pet is currently medication-free</p>
+              </div>
             </div>
           ) : (
             <div className="space-y-5">
@@ -742,7 +827,7 @@ const Dashboard = () => {
               ))}
               {activeMedications.length > 3 && (
                 <Link to={buildPath(ROUTES.MEDICATIONS, { id: selectedPetId })}
-                  className="flex items-center gap-1.5 text-xs font-bold"
+                  className="flex items-center gap-1.5 text-xs font-bold transition-all hover:translate-x-1"
                   style={{ color: C.prim }}>
                   View all prescriptions <ArrowRight className="h-3.5 w-3.5" />
                 </Link>

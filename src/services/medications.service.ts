@@ -18,13 +18,13 @@ interface DoseResponse { success: boolean; data: DoseLog }
 export const medicationsService = {
   /** Get all medication treatments for a pet */
   getAll: async (petId: string): Promise<MedListResponse> => {
-    const res = await api.get(`/medications/pet/${petId}`);
+    const res = await api.get(`/medications/pet/${petId}/`);
     return res.data;
   },
 
   /** Get single medication with progress info */
   getById: async (id: string): Promise<MedDetailResponse> => {
-    const res = await api.get(`/medications/${id}`);
+    const res = await api.get(`/medications/${id}/`);
     return res.data;
   },
 
@@ -41,13 +41,13 @@ export const medicationsService = {
     id: string,
     data: Partial<Medication>,
   ): Promise<MedResponse> => {
-    const res = await api.patch(`/medications/${id}`, data);
+    const res = await api.patch(`/medications/${id}/`, data);
     return res.data;
   },
 
   /** Delete a medication treatment and all dose logs */
   delete: async (id: string): Promise<{ success: boolean; message: string }> => {
-    const res = await api.delete(`/medications/${id}`);
+    const res = await api.delete(`/medications/${id}/`);
     return res.data;
   },
 
@@ -55,13 +55,13 @@ export const medicationsService = {
 
   /** Mark a dose as taken */
   markDose: async (doseId: string): Promise<DoseResponse> => {
-    const res = await api.post(`/medications/dose/${doseId}`);
+    const res = await api.post(`/medications/dose/${doseId}/`);
     return res.data;
   },
 
   /** Get all dose logs for a medication */
   getDoses: async (medicationId: string): Promise<DoseListResponse> => {
-    const res = await api.get(`/medications/${medicationId}/doses`);
+    const res = await api.get(`/medications/${medicationId}/doses/`);
     return res.data;
   },
 
@@ -70,7 +70,7 @@ export const medicationsService = {
     doseId: string,
     data: { status?: string; takenTime?: string },
   ): Promise<DoseResponse> => {
-    const res = await api.patch(`/medications/dose/${doseId}`, data);
+    const res = await api.patch(`/medications/dose/${doseId}/`, data);
     return res.data;
   },
 };

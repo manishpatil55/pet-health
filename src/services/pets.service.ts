@@ -6,19 +6,19 @@ export const petsService = {
     page = 1,
     limit = 10,
   ): Promise<PaginatedResponse<Pet>> => {
-    const res = await api.get('/pets', { params: { page, limit } });
+    const res = await api.get('/pets/', { params: { page, limit } });
     return res.data;
   },
 
   getById: async (id: string): Promise<{ success: boolean; data: Pet }> => {
-    const res = await api.get(`/pets/${id}`);
+    const res = await api.get(`/pets/${id}/`);
     return res.data;
   },
 
   create: async (
     data: Omit<Pet, '_id' | 'owner'>,
   ): Promise<{ success: boolean; data: Pet }> => {
-    const res = await api.post('/pets', data);
+    const res = await api.post('/pets/', data);
     return res.data;
   },
 
@@ -26,14 +26,14 @@ export const petsService = {
     id: string,
     data: Partial<Pet>,
   ): Promise<{ success: boolean; data: Pet }> => {
-    const res = await api.put(`/pets/${id}`, data);
+    const res = await api.put(`/pets/${id}/`, data);
     return res.data;
   },
 
   delete: async (
     id: string,
   ): Promise<{ success: boolean; message: string }> => {
-    const res = await api.delete(`/pets/${id}`);
+    const res = await api.delete(`/pets/${id}/`);
     return res.data;
   },
 };

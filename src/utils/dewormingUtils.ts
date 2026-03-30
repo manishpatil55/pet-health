@@ -4,8 +4,11 @@ import type { DewormingStatus } from '@/types';
 
 // Helper to compute next due date
 export const calculateNextDue = (lastDateStr: string, frequency: string): string => {
+  if (!lastDateStr) return new Date().toISOString();
   const date = parseISO(lastDateStr);
-  const f = frequency.toLowerCase();
+  if (isNaN(date.getTime())) return new Date().toISOString();
+  
+  const f = (frequency || '').toLowerCase();
   
   if (f === 'monthly') return addMonths(date, 1).toISOString();
   if (f === 'bi-monthly') return addMonths(date, 2).toISOString();

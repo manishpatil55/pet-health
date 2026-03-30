@@ -16,10 +16,10 @@ import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { motion, useInView, AnimatePresence } from 'framer-motion';
 import {
-  PawPrint, Shield, FileText, TrendingUp,
-  Star, Check, Minus, Lock, Cloud, Smartphone,
-  Share2, Download, Menu, X, Play, Bell, Users,
-  Heart, Mail, Globe, Zap, Activity,
+  PawPrint, Shield, CalendarCheck, FileText, TrendingUp,
+  ArrowRight, Star, Check, Minus, Lock, Cloud, Smartphone,
+  Share2, Download, Menu, X, Play, Bell, Scale, Users,
+  Heart, Mail, Globe, Zap, ChevronRight, Activity,
 } from 'lucide-react';
 import { ROUTES } from '@/constants/routes';
 import { Button } from '@/components/ui/Button';
@@ -36,7 +36,7 @@ const IMG = {
 // ─── Animation Variants ───────────────────────────────────────────────────────
 const fadeUp = {
   hidden: { opacity: 0, y: 28 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.65, ease: [0.16, 1, 0.3, 1] as const } },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.65, ease: [0.16, 1, 0.3, 1] } },
 };
 const staggerContainer = {
   hidden: {},
@@ -45,7 +45,7 @@ const staggerContainer = {
 const VP = { once: true, margin: '-60px' } as const;
 
 // ─── Shared types ─────────────────────────────────────────────────────────────
-// (Feature interface unused)
+interface Feature { icon: React.ElementType; title: string; description: string; accent: string }
 interface Testimonial { initial: string; name: string; sub: string; text: string; dark?: boolean }
 interface Plan { name: string; price: string; period: string; badge?: string; features: { yes: boolean; text: string }[]; cta: string; highlight?: boolean }
 
@@ -107,6 +107,11 @@ const KEYFRAMES = `
   }
   .card-lift { transition: box-shadow .28s, transform .28s }
   .card-lift:hover { box-shadow:0 20px 48px rgba(19,29,30,.12); transform:translateY(-3px) }
+  .hero-clip  {
+    clip-path: polygon(0 0,100% 0,100% 88%,88% 100%,0 100%);
+    border-radius: 1.5rem;
+  }
+  @media(max-width:768px){ .hero-clip { clip-path:none } }
   ::-webkit-scrollbar       { width:5px }
   ::-webkit-scrollbar-track { background:#eaf6f5 }
   ::-webkit-scrollbar-thumb { background:#4fb6b2; border-radius:99px }
@@ -350,12 +355,12 @@ function HeroSection() {
           <motion.div
             initial={{ opacity: 0, x: 40 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] as const }}
+            transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
             className="relative hidden lg:block"
           >
             {/* Main image */}
             <div className="paw-float-b relative">
-              <div className="rounded-[2rem] overflow-hidden shadow-[0_32px_80px_rgba(19,29,30,0.18)]">
+              <div className="hero-clip overflow-hidden shadow-[0_32px_80px_rgba(19,29,30,0.18)]">
                 <img
                   src={IMG.hero}
                   alt="Happy Golden Retriever"
@@ -411,7 +416,7 @@ function HeroSection() {
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: '94%' }}
-                    transition={{ duration: 1.2, delay: 0.8, ease: [0.16, 1, 0.3, 1] as const }}
+                    transition={{ duration: 1.2, delay: 0.8, ease: [0.16, 1, 0.3, 1] }}
                     className="h-full rounded-full"
                     style={{ background: 'linear-gradient(135deg,#006a67,#4fb6b2)' }}
                   />
@@ -498,7 +503,7 @@ function HeroSection() {
               src={IMG.hero}
               alt="Happy Golden Retriever"
               referrerPolicy="no-referrer"
-              className="w-full h-64 sm:h-80 object-cover object-[center_30%]"
+              className="w-full h-64 sm:h-80 object-cover"
             />
           </div>
         </motion.div>
@@ -652,10 +657,10 @@ function FeaturesSection() {
             </div>
           </motion.div>
 
-          {/* Card 2 — reminders */}
+          {/* Card 2 — reminders: xl:row-span-2 fills the bottom-right gap */}
           <motion.div
             variants={fadeUp} initial="hidden" whileInView="visible" viewport={VP}
-            className="card-lift bg-white rounded-3xl p-8 overflow-hidden relative"
+            className="card-lift bg-white rounded-3xl p-8 overflow-hidden relative xl:row-span-2"
           >
             <div className="pointer-events-none absolute -bottom-12 -right-12 w-40 h-40 rounded-full bg-[#006e29]/5 blur-2xl" />
             <div className="w-12 h-12 bg-[#93f59c] rounded-2xl flex items-center justify-center mb-6">
@@ -713,7 +718,7 @@ function FeaturesSection() {
                     style={{ background: b.color }}
                     initial={{ width: 0 }}
                     whileInView={{ width: `${b.val}%` }}
-                    transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] as const }}
+                    transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
                     viewport={{ once: true }}
                   />
                 </div>
@@ -737,7 +742,7 @@ function FeaturesSection() {
             </p>
           </motion.div>
 
-          {/* Card 5 — dark export card (xl: full width) */}
+          {/* Card 5 — dark export card: full width at md+ */}
           <motion.div
             variants={fadeUp} initial="hidden" whileInView="visible" viewport={VP}
             className="rounded-3xl p-8 md:col-span-2 xl:col-span-3 overflow-hidden relative"
@@ -837,27 +842,21 @@ function HowItWorksSection() {
           </motion.p>
         </motion.div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-16 relative">
-          {/* Desktop connector */}
-          <div
-            className="hidden md:block absolute top-8 left-[calc(33.33%+20px)] right-[calc(33.33%+20px)] h-px"
-            style={{
-              background: 'repeating-linear-gradient(90deg,#bdc9c7 0,#bdc9c7 8px,transparent 8px,transparent 18px)',
-            }}
-          />
+        {/*
+          ── Step connector approach:
+             Icons row uses flex on md+ so connectors sit inline as flex children
+             between the icon circles. On mobile (flex-col) connectors are hidden.
+        ──*/}
+
+        {/* Icons + connectors row — desktop flex, mobile hidden connectors */}
+        <div className="hidden md:flex items-center justify-between mb-0 px-[calc(100%/6-2rem)]">
           {STEPS.map((s, i) => (
-            <motion.div
-              key={i}
-              variants={fadeUp}
-              initial="hidden"
-              whileInView="visible"
-              viewport={VP}
-              transition={{ delay: i * 0.14 }}
-              className="text-center"
-            >
-              <div className="flex justify-center mb-3">
+            <>
+              {/* Icon */}
+              <div key={`icon-${i}`} className="flex-shrink-0">
                 {s.primary ? (
-                  <div className="ring-pulse relative w-16 h-16 rounded-full flex items-center justify-center shadow-lg"
+                  <div
+                    className="ring-pulse relative w-16 h-16 rounded-full flex items-center justify-center shadow-lg"
                     style={{ background: 'linear-gradient(135deg,#006a67,#4fb6b2)' }}
                   >
                     <s.icon className="h-7 w-7 text-white" />
@@ -868,14 +867,65 @@ function HowItWorksSection() {
                   </div>
                 )}
               </div>
+              {/* Connector between icons (not after last) */}
+              {i < STEPS.length - 1 && (
+                <div
+                  key={`conn-${i}`}
+                  className="flex-1 h-px mx-5"
+                  style={{
+                    background:
+                      'repeating-linear-gradient(90deg,#bdc9c7 0,#bdc9c7 8px,transparent 8px,transparent 18px)',
+                  }}
+                />
+              )}
+            </>
+          ))}
+        </div>
+
+        {/* Step cards — 3-col on md, 1-col on mobile */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 lg:gap-16 mt-0 md:-mt-8">
+          {STEPS.map((s, i) => (
+            <motion.div
+              key={i}
+              variants={fadeUp}
+              initial="hidden"
+              whileInView="visible"
+              viewport={VP}
+              transition={{ delay: i * 0.14 }}
+              className="text-center"
+            >
+              {/* Mobile-only icon (desktop icon is rendered in the row above) */}
+              <div className="flex justify-center mb-3 md:hidden">
+                {s.primary ? (
+                  <div
+                    className="ring-pulse relative w-16 h-16 rounded-full flex items-center justify-center shadow-lg"
+                    style={{ background: 'linear-gradient(135deg,#006a67,#4fb6b2)' }}
+                  >
+                    <s.icon className="h-7 w-7 text-white" />
+                  </div>
+                ) : (
+                  <div className="w-16 h-16 rounded-full bg-[#eaf6f5] flex items-center justify-center shadow-sm">
+                    <s.icon className="h-7 w-7 text-[#006a67]" />
+                  </div>
+                )}
+              </div>
+              {/* Spacer on desktop so text starts below the shared icon row */}
+              <div className="hidden md:block h-8" />
               <div
                 className="text-5xl font-black text-[#d9e5e4] mb-3 leading-none"
                 style={{ fontFamily: 'Manrope,sans-serif', letterSpacing: '-0.04em' }}
-              >{s.n}</div>
-              <h3 className="text-lg font-bold text-[#131d1e] mb-2" style={{ fontFamily: 'Manrope,sans-serif' }}>
+              >
+                {s.n}
+              </div>
+              <h3
+                className="text-lg font-bold text-[#131d1e] mb-2"
+                style={{ fontFamily: 'Manrope,sans-serif' }}
+              >
                 {s.head}
               </h3>
-              <p className="text-[#3d4948] text-sm leading-relaxed max-w-[220px] mx-auto">{s.body}</p>
+              <p className="text-[#3d4948] text-sm leading-relaxed max-w-[220px] mx-auto">
+                {s.body}
+              </p>
             </motion.div>
           ))}
         </div>
@@ -902,7 +952,7 @@ function SanctuarySection() {
             initial={{ opacity: 0, x: -30 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={VP}
-            transition={{ duration: 0.75, ease: [0.16, 1, 0.3, 1] as const }}
+            transition={{ duration: 0.75, ease: [0.16, 1, 0.3, 1] }}
           >
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-4">
@@ -1218,7 +1268,7 @@ function CTASection() {
           initial={{ opacity: 0, y: 32 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={VP}
-          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] as const }}
+          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
           className="rounded-[2rem] p-12 sm:p-16 lg:p-20 text-center relative overflow-hidden"
           style={{ background: 'linear-gradient(135deg,#006a67 0%,#4fb6b2 100%)' }}
         >

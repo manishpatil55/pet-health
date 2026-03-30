@@ -65,4 +65,22 @@ export const vaccinationsService = {
     const res = await api.delete(`/vaccinations/${id}/`);
     return res.data;
   },
+
+  // ─── Templates (Admin) ───────────────────────────────────────────
+  createTemplate: async (data: {
+    petType: string;
+    vaccineName: string;
+    isCoreVaccine: boolean;
+    recommendedAgeWeeks: number;
+    boosterIntervalWeeks: number;
+    description: string;
+  }): Promise<{ success: boolean; data: any }> => {
+    const res = await api.post('/vaccinations/templates/', data);
+    return res.data;
+  },
+
+  getTemplates: async (): Promise<{ success: boolean; data: any[] }> => {
+    const res = await api.get('/vaccinations/templates/');
+    return res.data;
+  },
 };

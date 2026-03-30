@@ -1,3 +1,7 @@
+/**
+ * DewormingTracker.tsx — Clinical Sanctuary Edition
+ */
+
 import { useState, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -28,6 +32,12 @@ const freqLabels: Record<string, string> = {
   annually: 'Once a year',
 };
 
+const fadeUp = {
+  hidden: { opacity: 0, y: 18 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } },
+};
+const stagger = { hidden: {}, visible: { transition: { staggerChildren: 0.07 } } };
+
 const DewormingTracker = () => {
   const { id: petId } = useParams<{ id: string }>();
   const navigate = useNavigate();
@@ -46,13 +56,11 @@ const DewormingTracker = () => {
   const records = historyData?.data || [];
   const isLoading = isLoadingSchedule || isLoadingHistory;
 
-  // Sort records newest first
   const sortedRecords = useMemo(
     () => [...records].sort((a, b) => new Date(b.dateAdministered).getTime() - new Date(a.dateAdministered).getTime()),
     [records],
   );
 
-  // Compute next due
   let nextDueDateStr: string | null = null;
   let nextDueStatus: DewormingStatus | null = null;
 
@@ -71,29 +79,64 @@ const DewormingTracker = () => {
     deleteRecord.mutate(deleteTarget, { onSuccess: () => setDeleteTarget(null) });
   };
 
+  const statusColor: Record<string, string> = {
+    overdue: '#E76F51',
+    upcoming: '#F2B544',
+    completed: '#6BCB77',
+  };
+
   return (
-    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }} className="space-y-6 pb-24">
-      {/* Header */}
-      <div className="flex items-center gap-3">
-        <button onClick={() => navigate(-1)} className="text-[#7A8A8A] hover:text-[#2F3A3A]"><ArrowLeft className="h-5 w-5" /></button>
+    <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+      {/* ── Page Header ── */}
+      <motion.div
+        initial={{ opacity: 0, y: 14 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        className="flex items-center gap-4 mb-8"
+      >
+        <button
+          onClick={() => navigate(-1)}
+          className="w-10 h-10 rounded-full flex items-center justify-center transition-all"
+          style={{
+            background: '#ffffff',
+            border: '1.5px solid rgba(189,201,199,.4)',
+            cursor: 'pointer',
+            color: '#3d4948',
+          }}
+          onMouseEnter={(e) => { e.currentTarget.style.background = '#eaf6f5'; e.currentTarget.style.borderColor = '#4fb6b2'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.background = '#ffffff'; e.currentTarget.style.borderColor = 'rgba(189,201,199,.4)'; }}
+        >
+          <ArrowLeft className="h-4 w-4" />
+        </button>
         <div className="flex-1">
-          <h1 className="text-xl font-bold text-[#2F3A3A]">Deworming</h1>
-          {pet && <p className="text-sm text-[#7A8A8A]">{pet.name}</p>}
+          <h1
+            className="font-black tracking-tight"
+            style={{
+              fontFamily: 'Manrope, sans-serif',
+              fontSize: 'clamp(1.5rem, 3vw, 2rem)',
+              color: '#131d1e',
+              letterSpacing: '-0.025em',
+              lineHeight: 1.1,
+            }}
+          >
+            Deworming
+          </h1>
+          {pet && <p className="text-sm mt-0.5" style={{ color: '#6d7978' }}>{pet.name}'s parasite protection</p>}
         </div>
-        <div className="flex flex-col sm:flex-row gap-2">
+        <div className="flex gap-2">
           {schedule && (
-            <Button size="sm" className="gap-1" onClick={() => setIsRecordModalOpen(true)}>
-              <Bug className="h-4 w-4" /> Log Dose
+            <Button size="sm" pill className="gap-1.5" onClick={() => setIsRecordModalOpen(true)}>
+              <Bug className="h-3.5 w-3.5" /> Log Dose
             </Button>
           )}
-          <Button variant="secondary" size="sm" className="gap-1" onClick={() => setIsScheduleModalOpen(true)}>
-            <CalendarCheck className="h-4 w-4" /> {schedule ? 'Edit Schedule' : 'Set Schedule'}
+          <Button variant="secondary" size="sm" pill className="gap-1.5" onClick={() => setIsScheduleModalOpen(true)}>
+            <CalendarCheck className="h-3.5 w-3.5" /> {schedule ? 'Edit' : 'Set Schedule'}
           </Button>
         </div>
-      </div>
+      </motion.div>
 
       {isLoading ? (
-        <div className="space-y-3">{[1, 2].map((i) => <SkeletonLoader key={i} variant="card" />)}</div>
+        <div className="space-y-4">{[1, 2].map((i) => <SkeletonLoader key={i} variant="card" />)}</div>
       ) : !schedule ? (
         <EmptyState
           icon={Bug}
@@ -103,68 +146,102 @@ const DewormingTracker = () => {
           onAction={() => setIsScheduleModalOpen(true)}
         />
       ) : (
-        <>
-          {/* Summary row */}
-          <div className="grid grid-cols-2 gap-3">
-            <Card className="!p-4">
-              <div className="flex items-center gap-2 mb-1">
-                <ShieldCheck className="h-4 w-4 text-[#4FB6B2]" />
-                <p className="text-xs text-[#7A8A8A]">Schedule</p>
+        <motion.div variants={stagger} initial="hidden" animate="visible" className="space-y-6">
+          {/* ── Summary Row ── */}
+          <motion.div variants={fadeUp} className="grid grid-cols-2 gap-4">
+            <div
+              className="rounded-2xl p-5"
+              style={{ background: 'rgba(79,182,178,.06)', border: '1px solid rgba(79,182,178,.12)' }}
+            >
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center mb-2" style={{ background: 'rgba(79,182,178,.15)' }}>
+                <ShieldCheck className="h-4.5 w-4.5 text-[#4fb6b2]" />
               </div>
-              <p className="text-lg font-bold text-[#2F3A3A]">{freqLabels[schedule.frequency] || schedule.frequency}</p>
-            </Card>
-            <Card className="!p-4">
-              <div className="flex items-center gap-2 mb-1">
-                <CheckCircle2 className="h-4 w-4 text-[#6BCB77]" />
-                <p className="text-xs text-[#7A8A8A]">Total Doses</p>
+              <p className="text-lg font-black" style={{ color: '#006a67', fontFamily: 'Manrope, sans-serif' }}>
+                {freqLabels[schedule.frequency] || schedule.frequency}
+              </p>
+              <p className="text-[11px] font-semibold" style={{ color: '#6d7978' }}>Schedule</p>
+            </div>
+            <div
+              className="rounded-2xl p-5"
+              style={{ background: 'rgba(107,203,119,.06)', border: '1px solid rgba(107,203,119,.12)' }}
+            >
+              <div className="w-9 h-9 rounded-xl flex items-center justify-center mb-2" style={{ background: 'rgba(107,203,119,.15)' }}>
+                <CheckCircle2 className="h-4.5 w-4.5 text-[#6BCB77]" />
               </div>
-              <p className="text-lg font-bold text-[#2F3A3A]">{records.length}</p>
-            </Card>
-          </div>
+              <p className="text-3xl font-black" style={{ color: '#6BCB77', fontFamily: 'Manrope, sans-serif' }}>{records.length}</p>
+              <p className="text-[11px] font-semibold" style={{ color: '#6d7978' }}>Total Doses</p>
+            </div>
+          </motion.div>
 
-          {/* Next due banner */}
+          {/* ── Next Due Banner ── */}
           {nextDueDateStr && nextDueStatus && (
-            <Card className={`!border-l-4 ${nextDueStatus === 'overdue' ? '!border-l-[#E76F51] bg-[#E76F51]/[0.03]' : nextDueStatus === 'upcoming' ? '!border-l-[#F2B544] bg-[#F2B544]/[0.03]' : '!border-l-[#6BCB77] bg-[#6BCB77]/[0.03]'}`}>
-              <div className="flex items-center justify-between">
-                <div>
-                  <div className="flex items-center gap-2 mb-1">
-                    {nextDueStatus === 'overdue' ? (
-                      <AlertTriangle className="h-4 w-4 text-[#E76F51]" />
-                    ) : (
-                      <Calendar className="h-4 w-4 text-[#F2B544]" />
-                    )}
-                    <h3 className="text-sm font-semibold text-[#2F3A3A]">
-                      {nextDueStatus === 'overdue' ? 'Overdue!' : 'Next Due'}
-                    </h3>
+            <motion.div variants={fadeUp}>
+              <Card
+                variant={nextDueStatus === 'overdue' ? 'default' : 'default'}
+                style={{
+                  borderLeft: `4px solid ${statusColor[nextDueStatus] || '#4fb6b2'}`,
+                  background: `${statusColor[nextDueStatus] || '#4fb6b2'}08`,
+                }}
+              >
+                <div className="flex items-center justify-between">
+                  <div>
+                    <div className="flex items-center gap-2 mb-2">
+                      <div
+                        className="w-8 h-8 rounded-xl flex items-center justify-center"
+                        style={{ background: `${statusColor[nextDueStatus]}15` }}
+                      >
+                        {nextDueStatus === 'overdue' ? (
+                          <AlertTriangle className="h-4 w-4" style={{ color: statusColor[nextDueStatus] }} />
+                        ) : (
+                          <Calendar className="h-4 w-4" style={{ color: statusColor[nextDueStatus] }} />
+                        )}
+                      </div>
+                      <h3 className="text-sm font-bold" style={{ color: '#131d1e' }}>
+                        {nextDueStatus === 'overdue' ? 'Overdue!' : 'Next Due'}
+                      </h3>
+                    </div>
+                    <p className="text-2xl font-black mb-0.5" style={{ color: '#131d1e', fontFamily: 'Manrope, sans-serif' }}>
+                      {formatCountdown(nextDueDateStr)}
+                    </p>
+                    <p className="text-xs" style={{ color: '#6d7978' }}>{formatDate(nextDueDateStr)}</p>
                   </div>
-                  <p className="text-2xl font-bold text-[#2F3A3A] mb-0.5">{formatCountdown(nextDueDateStr)}</p>
-                  <p className="text-xs text-[#7A8A8A]">{formatDate(nextDueDateStr)}</p>
+                  <StatusBadge status={nextDueStatus} />
                 </div>
-                <StatusBadge status={nextDueStatus} />
-              </div>
-            </Card>
+              </Card>
+            </motion.div>
           )}
 
-          {/* Dose history (timeline style) */}
-          <div>
-            <div className="flex items-center justify-between mb-3">
-              <h3 className="text-base font-semibold text-[#2F3A3A]">Dose History</h3>
-              <span className="text-xs text-[#7A8A8A]">{records.length} record{records.length !== 1 ? 's' : ''}</span>
+          {/* ── Dose History ── */}
+          <motion.div variants={fadeUp}>
+            <div className="flex items-center gap-3 mb-4">
+              <div className="w-1 h-5 rounded-full" style={{ background: 'linear-gradient(180deg, #006a67, #4fb6b2)' }} />
+              <h3 className="text-xs font-bold uppercase tracking-[0.18em]" style={{ color: '#6d7978' }}>
+                Dose History
+              </h3>
+              <span className="text-[11px] font-semibold px-2 py-0.5 rounded-full" style={{ background: '#eaf6f5', color: '#4fb6b2' }}>
+                {records.length}
+              </span>
             </div>
 
             {records.length === 0 ? (
-              <div className="text-center py-10 bg-[#F5F7F7] rounded-2xl border border-dashed border-[#E5E9E9]">
-                <Bug className="h-8 w-8 text-[#7A8A8A]/40 mx-auto mb-2" />
-                <p className="text-sm text-[#7A8A8A]">No doses recorded yet.</p>
-                <p className="text-xs text-[#7A8A8A] mt-1">Click "Log Dose" to record your pet's first treatment.</p>
+              <div
+                className="text-center py-12 rounded-3xl"
+                style={{ background: '#eaf6f5', border: '2px dashed rgba(189,201,199,.3)' }}
+              >
+                <Bug className="h-10 w-10 mx-auto mb-3" style={{ color: '#bdc9c7' }} />
+                <p className="text-sm font-semibold" style={{ color: '#6d7978' }}>No doses recorded yet.</p>
+                <p className="text-xs mt-1" style={{ color: '#bdc9c7' }}>Click "Log Dose" to record treatment.</p>
               </div>
             ) : (
               <AnimatePresence mode="popLayout">
                 <div className="relative">
                   {/* Timeline line */}
-                  <div className="absolute left-5 top-3 bottom-3 w-px bg-[#E6EEEE]" />
+                  <div
+                    className="absolute left-5 top-3 bottom-3 w-px"
+                    style={{ background: 'linear-gradient(180deg, #4fb6b2, #eaf6f5)' }}
+                  />
 
-                  <div className="space-y-3">
+                  <div className="space-y-4">
                     {sortedRecords.map((d, index) => (
                       <motion.div
                         key={d._id}
@@ -176,19 +253,28 @@ const DewormingTracker = () => {
                         className="relative pl-12"
                       >
                         {/* Timeline dot */}
-                        <div className="absolute left-3.5 top-4 w-3 h-3 rounded-full border-2 border-[#4FB6B2] bg-white z-10" />
+                        <div
+                          className="absolute left-3.5 top-5 w-3 h-3 rounded-full z-10"
+                          style={{
+                            background: '#ffffff',
+                            border: '2.5px solid #4fb6b2',
+                            boxShadow: '0 0 0 3px rgba(79,182,178,.15)',
+                          }}
+                        />
 
                         <Card>
                           <div className="flex items-start justify-between">
                             <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-1">
-                                <h4 className="text-sm font-semibold text-[#2F3A3A]">{d.productName}</h4>
-                                <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-[#6BCB77]/15 text-[#6BCB77]">
-                                  <CheckCircle2 className="h-3 w-3 inline mr-0.5" />
-                                  done
+                              <div className="flex items-center gap-2 mb-1.5">
+                                <h4 className="text-sm font-bold" style={{ color: '#131d1e' }}>{d.productName}</h4>
+                                <span
+                                  className="text-[10px] font-bold px-2 py-0.5 rounded-full flex items-center gap-1"
+                                  style={{ background: 'rgba(107,203,119,.1)', color: '#6BCB77' }}
+                                >
+                                  <CheckCircle2 className="h-3 w-3" /> done
                                 </span>
                               </div>
-                              <div className="flex items-center gap-3 text-xs text-[#7A8A8A] mb-1">
+                              <div className="flex items-center gap-3 text-xs" style={{ color: '#bdc9c7' }}>
                                 <span className="flex items-center gap-1">
                                   <Calendar className="h-3 w-3" /> {formatDate(d.dateAdministered)}
                                 </span>
@@ -197,15 +283,21 @@ const DewormingTracker = () => {
                                 </span>
                               </div>
                               {d.notes && (
-                                <p className="text-xs text-[#7A8A8A] bg-[#F5F7F7] p-2 rounded-lg italic mt-2">"{d.notes}"</p>
+                                <p
+                                  className="text-xs italic mt-2 p-3 rounded-xl"
+                                  style={{ background: '#eaf6f5', color: '#6d7978' }}
+                                >
+                                  "{d.notes}"
+                                </p>
                               )}
                             </div>
                             <button
                               onClick={() => setDeleteTarget(d._id)}
-                              className="p-2 text-[#7A8A8A] hover:text-[#E76F51] hover:bg-[#E76F51]/10 rounded-lg transition-colors flex-shrink-0"
+                              className="w-8 h-8 rounded-xl flex items-center justify-center transition-all hover:scale-105 flex-shrink-0"
+                              style={{ background: 'rgba(231,111,81,.08)', cursor: 'pointer' }}
                               title="Delete record"
                             >
-                              <Trash2 className="h-4 w-4" />
+                              <Trash2 className="h-4 w-4 text-[#E76F51]" />
                             </button>
                           </div>
                         </Card>
@@ -215,8 +307,8 @@ const DewormingTracker = () => {
                 </div>
               </AnimatePresence>
             )}
-          </div>
-        </>
+          </motion.div>
+        </motion.div>
       )}
 
       {/* Modals */}
@@ -236,7 +328,6 @@ const DewormingTracker = () => {
         </>
       )}
 
-      {/* Delete confirmation */}
       <ConfirmDialog
         open={!!deleteTarget}
         onClose={() => setDeleteTarget(null)}
@@ -247,7 +338,7 @@ const DewormingTracker = () => {
         onConfirm={handleDelete}
         isLoading={deleteRecord.isPending}
       />
-    </motion.div>
+    </div>
   );
 };
 

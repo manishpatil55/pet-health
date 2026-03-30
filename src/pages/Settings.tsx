@@ -1,3 +1,7 @@
+/**
+ * Settings.tsx — Clinical Sanctuary Edition
+ */
+
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
@@ -6,7 +10,7 @@ import { z } from 'zod';
 import { motion } from 'framer-motion';
 import {
   User, Lock, Bell, Palette, Database, AlertTriangle,
-  Eye, EyeOff, LogOut, Trash2, Moon, Sun,
+  Eye, EyeOff, LogOut, Trash2, Moon, Sun, Shield, Download,
 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -36,6 +40,12 @@ const passwordSchema = z
   });
 
 type PasswordFormData = z.infer<typeof passwordSchema>;
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 18 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } },
+};
+const stagger = { hidden: {}, visible: { transition: { staggerChildren: 0.08 } } };
 
 const Settings = () => {
   const navigate = useNavigate();
@@ -111,153 +121,210 @@ const Settings = () => {
     }
   };
 
+  // Section header helper
+  const SectionHeader = ({ icon: Icon, label, color = '#4fb6b2' }: { icon: React.ElementType; label: string; color?: string }) => (
+    <div className="flex items-center gap-3 mb-5">
+      <div
+        className="w-9 h-9 rounded-xl flex items-center justify-center"
+        style={{ background: `${color}15` }}
+      >
+        <Icon className="h-4.5 w-4.5" style={{ color }} />
+      </div>
+      <h2
+        className="text-sm font-bold"
+        style={{ color: '#131d1e', fontFamily: 'Manrope, sans-serif' }}
+      >
+        {label}
+      </h2>
+    </div>
+  );
+
+  const Divider = () => <div className="h-px" style={{ background: 'rgba(189,201,199,.12)' }} />;
+
   return (
-    <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }} className="space-y-6 max-w-2xl">
-      <h1 className="text-xl font-bold text-[#2F3A3A]">Settings</h1>
+    <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+      {/* ── Page Header ── */}
+      <motion.div
+        initial={{ opacity: 0, y: 14 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        className="mb-8"
+      >
+        <h1
+          className="font-black tracking-tight"
+          style={{
+            fontFamily: 'Manrope, sans-serif',
+            fontSize: 'clamp(1.5rem, 3vw, 2rem)',
+            color: '#131d1e',
+            letterSpacing: '-0.025em',
+            lineHeight: 1.1,
+          }}
+        >
+          Settings
+        </h1>
+        <p className="text-sm mt-1" style={{ color: '#6d7978' }}>Manage your account & preferences</p>
+      </motion.div>
 
-      {/* Account */}
-      <Card>
-        <div className="flex items-center gap-2 mb-4">
-          <User className="h-5 w-5 text-[#4FB6B2]" />
-          <h2 className="text-base font-semibold text-[#2F3A3A]">Account</h2>
-        </div>
-        <div className="space-y-3">
-          <div className="flex items-center justify-between py-2">
-            <div>
-              <p className="text-sm font-medium text-[#2F3A3A]">Name</p>
-              <p className="text-sm text-[#7A8A8A]">{user?.name ?? '—'}</p>
+      <motion.div
+        variants={stagger}
+        initial="hidden"
+        animate="visible"
+        className="space-y-6 max-w-2xl"
+      >
+        {/* ── Account ── */}
+        <motion.div variants={fadeUp}>
+          <Card>
+            <SectionHeader icon={User} label="Account" />
+            <div className="space-y-0">
+              <div className="flex items-center justify-between py-3">
+                <div>
+                  <p className="text-sm font-bold" style={{ color: '#131d1e' }}>Name</p>
+                  <p className="text-xs" style={{ color: '#6d7978' }}>{user?.name ?? '—'}</p>
+                </div>
+              </div>
+              <Divider />
+              <div className="flex items-center justify-between py-3">
+                <div>
+                  <p className="text-sm font-bold" style={{ color: '#131d1e' }}>Email</p>
+                  <p className="text-xs" style={{ color: '#6d7978' }}>{user?.email ?? '—'}</p>
+                </div>
+              </div>
+              <Divider />
+              <div className="flex items-center justify-between py-3">
+                <div>
+                  <p className="text-sm font-bold" style={{ color: '#131d1e' }}>Password</p>
+                  <p className="text-xs" style={{ color: '#bdc9c7' }}>Change your account password</p>
+                </div>
+                <Button variant="secondary" size="sm" pill onClick={() => setPasswordModal(true)}>
+                  <Lock className="h-3.5 w-3.5 mr-1.5" /> Change
+                </Button>
+              </div>
             </div>
-          </div>
-          <div className="border-t border-[#E6EEEE]" />
-          <div className="flex items-center justify-between py-2">
-            <div>
-              <p className="text-sm font-medium text-[#2F3A3A]">Email</p>
-              <p className="text-sm text-[#7A8A8A]">{user?.email ?? '—'}</p>
-            </div>
-          </div>
-          <div className="border-t border-[#E6EEEE]" />
-          <div className="flex items-center justify-between py-2">
-            <div>
-              <p className="text-sm font-medium text-[#2F3A3A]">Password</p>
-              <p className="text-xs text-[#7A8A8A]">Change your account password</p>
-            </div>
-            <Button variant="secondary" size="sm" onClick={() => setPasswordModal(true)}>
-              <Lock className="h-3.5 w-3.5" /> Change
-            </Button>
-          </div>
-        </div>
-      </Card>
+          </Card>
+        </motion.div>
 
-      {/* Preferences */}
-      <Card>
-        <div className="flex items-center gap-2 mb-4">
-          <Bell className="h-5 w-5 text-[#4FB6B2]" />
-          <h2 className="text-base font-semibold text-[#2F3A3A]">Preferences</h2>
-        </div>
-        <div className="space-y-3">
-          <div className="flex items-center justify-between py-2">
-            <div>
-              <p className="text-sm font-medium text-[#2F3A3A]">Weight Unit</p>
-              <p className="text-xs text-[#7A8A8A]">Default unit for weight tracking</p>
+        {/* ── Preferences ── */}
+        <motion.div variants={fadeUp}>
+          <Card>
+            <SectionHeader icon={Bell} label="Preferences" color="#006e29" />
+            <div className="flex items-center justify-between py-3">
+              <div>
+                <p className="text-sm font-bold" style={{ color: '#131d1e' }}>Weight Unit</p>
+                <p className="text-xs" style={{ color: '#bdc9c7' }}>Default unit for weight tracking</p>
+              </div>
+              <div className="flex gap-1 p-1 rounded-full" style={{ background: '#eaf6f5' }}>
+                {(['kg', 'lbs'] as const).map((u) => (
+                  <button
+                    key={u}
+                    onClick={() => setWeightUnit(u)}
+                    className="px-4 py-1.5 rounded-full text-xs font-bold transition-all duration-200"
+                    style={{
+                      background: weightUnit === u ? 'linear-gradient(135deg, #006a67, #4fb6b2)' : 'transparent',
+                      color: weightUnit === u ? '#ffffff' : '#6d7978',
+                      boxShadow: weightUnit === u ? '0 2px 8px rgba(0,106,103,.25)' : 'none',
+                      cursor: 'pointer',
+                    }}
+                  >
+                    {u}
+                  </button>
+                ))}
+              </div>
             </div>
-            <div className="flex gap-1">
-              {(['kg', 'lbs'] as const).map((u) => (
-                <button
-                  key={u}
-                  onClick={() => setWeightUnit(u)}
-                  className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-colors ${
-                    weightUnit === u ? 'bg-[#4FB6B2] text-white' : 'bg-[#F7FAFA] text-[#7A8A8A]'
-                  }`}
+          </Card>
+        </motion.div>
+
+        {/* ── Appearance ── */}
+        <motion.div variants={fadeUp}>
+          <Card>
+            <SectionHeader icon={Palette} label="Appearance" color="#d69c2c" />
+            <div className="flex items-center justify-between py-3">
+              <div>
+                <p className="text-sm font-bold" style={{ color: '#131d1e' }}>Dark Mode</p>
+                <p className="text-xs" style={{ color: '#bdc9c7' }}>Switch between light and dark themes</p>
+              </div>
+              <button
+                onClick={() => {
+                  setDarkMode(!darkMode);
+                  toast.success(darkMode ? 'Light mode enabled' : 'Dark mode coming soon!');
+                }}
+                className="relative w-14 h-7 rounded-full transition-all duration-300"
+                style={{
+                  background: darkMode
+                    ? 'linear-gradient(135deg, #006a67, #4fb6b2)'
+                    : '#d9e5e4',
+                  boxShadow: darkMode ? '0 2px 8px rgba(0,106,103,.25)' : 'none',
+                  cursor: 'pointer',
+                }}
+              >
+                <div
+                  className="absolute top-0.5 h-6 w-6 rounded-full bg-white shadow-md flex items-center justify-center transition-transform duration-300"
+                  style={{ transform: darkMode ? 'translateX(30px)' : 'translateX(2px)' }}
                 >
-                  {u}
-                </button>
-              ))}
+                  {darkMode ? <Moon className="h-3 w-3 text-[#006a67]" /> : <Sun className="h-3 w-3 text-[#bdc9c7]" />}
+                </div>
+              </button>
             </div>
-          </div>
-        </div>
-      </Card>
+          </Card>
+        </motion.div>
 
-      {/* Appearance */}
-      <Card>
-        <div className="flex items-center gap-2 mb-4">
-          <Palette className="h-5 w-5 text-[#4FB6B2]" />
-          <h2 className="text-base font-semibold text-[#2F3A3A]">Appearance</h2>
-        </div>
-        <div className="flex items-center justify-between py-2">
-          <div>
-            <p className="text-sm font-medium text-[#2F3A3A]">Dark Mode</p>
-            <p className="text-xs text-[#7A8A8A]">Switch between light and dark themes</p>
-          </div>
-          <button
-            onClick={() => {
-              setDarkMode(!darkMode);
-              toast.success(darkMode ? 'Light mode enabled' : 'Dark mode coming soon!');
+        {/* ── Data ── */}
+        <motion.div variants={fadeUp}>
+          <Card>
+            <SectionHeader icon={Database} label="Data & Sessions" color="#006a67" />
+            <div className="space-y-0">
+              <div className="flex items-center justify-between py-3">
+                <div>
+                  <p className="text-sm font-bold" style={{ color: '#131d1e' }}>Export as PDF</p>
+                  <p className="text-xs" style={{ color: '#bdc9c7' }}>Download all your pet's data</p>
+                </div>
+                <Button variant="secondary" size="sm" pill onClick={() => toast.success('Export feature coming soon!')}>
+                  <Download className="h-3.5 w-3.5 mr-1.5" /> Export
+                </Button>
+              </div>
+              <Divider />
+              <div className="flex items-center justify-between py-3">
+                <div>
+                  <p className="text-sm font-bold" style={{ color: '#131d1e' }}>Sessions</p>
+                  <p className="text-xs" style={{ color: '#bdc9c7' }}>Log out of all other sessions</p>
+                </div>
+                <Button variant="secondary" size="sm" pill className="gap-1" onClick={handleLogoutAll}>
+                  <Shield className="h-3.5 w-3.5" /> Logout All
+                </Button>
+              </div>
+            </div>
+          </Card>
+        </motion.div>
+
+        {/* ── Danger Zone ── */}
+        <motion.div variants={fadeUp}>
+          <Card
+            style={{
+              border: '1.5px solid rgba(186,26,26,.15)',
+              background: 'rgba(186,26,26,.02)',
             }}
-            className={`relative w-12 h-6 rounded-full transition-colors ${
-              darkMode ? 'bg-[#4FB6B2]' : 'bg-[#E6EEEE]'
-            }`}
           >
-            <div className={`absolute top-0.5 h-5 w-5 rounded-full bg-white shadow transition-transform flex items-center justify-center ${
-              darkMode ? 'translate-x-6' : 'translate-x-0.5'
-            }`}>
-              {darkMode ? <Moon className="h-3 w-3 text-[#4FB6B2]" /> : <Sun className="h-3 w-3 text-[#7A8A8A]" />}
+            <SectionHeader icon={AlertTriangle} label="Danger Zone" color="#ba1a1a" />
+            <div className="flex items-center justify-between py-3">
+              <div>
+                <p className="text-sm font-bold" style={{ color: '#131d1e' }}>Delete Account</p>
+                <p className="text-xs" style={{ color: '#bdc9c7' }}>Permanently delete your account and all data</p>
+              </div>
+              <Button variant="danger" size="sm" pill className="gap-1" onClick={() => setDeleteConfirm(true)}>
+                <Trash2 className="h-3.5 w-3.5" /> Delete
+              </Button>
             </div>
-          </button>
-        </div>
-      </Card>
+          </Card>
+        </motion.div>
 
-      {/* Data */}
-      <Card>
-        <div className="flex items-center gap-2 mb-4">
-          <Database className="h-5 w-5 text-[#4FB6B2]" />
-          <h2 className="text-base font-semibold text-[#2F3A3A]">Data</h2>
-        </div>
-        <div className="space-y-3">
-          <div className="flex items-center justify-between py-2">
-            <div>
-              <p className="text-sm font-medium text-[#2F3A3A]">Export as PDF</p>
-              <p className="text-xs text-[#7A8A8A]">Download all your pet's data</p>
-            </div>
-            <Button variant="secondary" size="sm" onClick={() => toast.success('Export feature coming soon!')}>
-              Export
-            </Button>
-          </div>
-          <div className="border-t border-[#E6EEEE]" />
-          <div className="flex items-center justify-between py-2">
-            <div>
-              <p className="text-sm font-medium text-[#2F3A3A]">Sessions</p>
-              <p className="text-xs text-[#7A8A8A]">Log out of all sessions</p>
-            </div>
-            <Button variant="secondary" size="sm" className="gap-1" onClick={handleLogoutAll}>
-              <LogOut className="h-3.5 w-3.5" /> Logout All
-            </Button>
-          </div>
-        </div>
-      </Card>
-
-      {/* Danger Zone */}
-      <Card className="!border !border-[#E76F51]/30">
-        <div className="flex items-center gap-2 mb-4">
-          <AlertTriangle className="h-5 w-5 text-[#E76F51]" />
-          <h2 className="text-base font-semibold text-[#E76F51]">Danger Zone</h2>
-        </div>
-        <div className="flex items-center justify-between py-2">
-          <div>
-            <p className="text-sm font-medium text-[#2F3A3A]">Delete Account</p>
-            <p className="text-xs text-[#7A8A8A]">Permanently delete your account and all data</p>
-          </div>
-          <Button variant="danger" size="sm" className="gap-1" onClick={() => setDeleteConfirm(true)}>
-            <Trash2 className="h-3.5 w-3.5" /> Delete
+        {/* ── Logout ── */}
+        <motion.div variants={fadeUp}>
+          <Button variant="secondary" fullWidth className="gap-2" onClick={handleLogout}>
+            <LogOut className="h-4 w-4" /> Log out
           </Button>
-        </div>
-      </Card>
+        </motion.div>
+      </motion.div>
 
-      {/* Logout */}
-      <Button variant="secondary" fullWidth className="gap-2" onClick={handleLogout}>
-        <LogOut className="h-4 w-4" /> Log out
-      </Button>
-
-      {/* Change Password Modal */}
+      {/* ── Modals ── */}
       <Modal open={passwordModal} onClose={() => { setPasswordModal(false); reset(); }} title="Change Password">
         <form onSubmit={handleSubmit(onChangePassword)} className="space-y-4">
           <div className="relative">
@@ -277,7 +344,6 @@ const Settings = () => {
         </form>
       </Modal>
 
-      {/* Delete Confirm */}
       <ConfirmDialog
         open={deleteConfirm}
         onClose={() => setDeleteConfirm(false)}
@@ -288,7 +354,7 @@ const Settings = () => {
         variant="danger"
         isLoading={deleteLoading}
       />
-    </motion.div>
+    </div>
   );
 };
 

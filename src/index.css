@@ -3,11 +3,31 @@
 @tailwind utilities;
 
 :root {
-  /* Design System Color Tokens */
+  /* ─── Clinical Sanctuary Design Tokens ─── */
+  --cs-bg: #f0fcfb;
+  --cs-surf-lo: #eaf6f5;
+  --cs-surf-hi: #dfebea;
+  --cs-surf-dim: #d9e5e4;
+  --cs-surf: #ffffff;
+  --cs-primary: #006a67;
+  --cs-primary-c: #4fb6b2;
+  --cs-primary-f: #8ff3ef;
+  --cs-primary-dk: #004442;
+  --cs-secondary: #006e29;
+  --cs-sec-c: #93f59c;
+  --cs-tert-c: #d69c2c;
+  --cs-error: #ba1a1a;
+  --cs-error-c: #ffdad6;
+  --cs-on-surf: #131d1e;
+  --cs-on-surf-v: #3d4948;
+  --cs-outline: #6d7978;
+  --cs-outline-v: #bdc9c7;
+
+  /* Legacy compat tokens */
   --color-primary: #4FB6B2;
   --color-primary-light: #CFEDEA;
   --color-primary-hover: #3da09c;
-  --color-bg: #F7FAFA;
+  --color-bg: #f0fcfb;
   --color-card: #FFFFFF;
   --color-text: #2F3A3A;
   --color-text-secondary: #7A8A8A;
@@ -16,20 +36,23 @@
   --color-warning: #F2B544;
   --color-error: #E76F51;
 
-  /* Shadows */
-  --shadow-card: 0 1px 4px rgba(47, 58, 58, 0.06);
-  --shadow-card-hover: 0 4px 12px rgba(79, 182, 178, 0.15);
+  /* Shadows — Clinical Sanctuary */
+  --shadow-card: 0 2px 20px rgba(19, 29, 30, 0.06);
+  --shadow-card-hover: 0 12px 32px rgba(0, 106, 103, 0.12);
+  --shadow-bento: 0 4px 24px rgba(19, 29, 30, 0.07);
+  --shadow-bento-dark: 0 8px 32px rgba(0, 68, 66, 0.22);
 
   /* Radii */
-  --radius-card: 12px;
-  --radius-input: 8px;
-  --radius-button: 8px;
+  --radius-card: 24px;
+  --radius-input: 12px;
+  --radius-button: 12px;
+
+  /* Signature gradient */
+  --sig-gradient: linear-gradient(135deg, #006a67 0%, #4fb6b2 100%);
 }
 
-/* Base Styles */
-*,
-*::before,
-*::after {
+/* ─── Base Styles ─── */
+*, *::before, *::after {
   box-sizing: border-box;
 }
 
@@ -40,40 +63,72 @@ html {
 
 body {
   margin: 0;
-  font-family: 'DM Sans', system-ui, -apple-system, sans-serif;
-  background-color: var(--color-bg);
-  color: var(--color-text);
+  font-family: 'Plus Jakarta Sans', 'DM Sans', system-ui, -apple-system, sans-serif;
+  background-color: var(--cs-bg);
+  color: var(--cs-on-surf);
   line-height: 1.5;
 }
 
-/* Scrollbar Styling */
+/* ─── Selection ─── */
+::selection {
+  background: #8ff3ef;
+  color: #004442;
+}
+
+/* ─── Scrollbar — Clinical Sanctuary ─── */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
-
 ::-webkit-scrollbar-track {
-  background: transparent;
+  background: var(--cs-surf-lo);
 }
-
 ::-webkit-scrollbar-thumb {
-  background: var(--color-divider);
-  border-radius: 3px;
+  background: var(--cs-primary-c);
+  border-radius: 99px;
 }
-
 ::-webkit-scrollbar-thumb:hover {
-  background: var(--color-text-secondary);
+  background: var(--cs-primary);
 }
 
-/* Focus Ring */
+/* ─── Focus Ring ─── */
 *:focus-visible {
-  outline: 2px solid var(--color-primary);
+  outline: 2px solid var(--cs-primary-c);
   outline-offset: 2px;
 }
 
-/* Utility Layer */
+/* ─── Global Animations ─── */
+@keyframes cs-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+@keyframes cs-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+@keyframes cs-pulse-ring {
+  0% { transform: scale(1); opacity: 0.55; }
+  100% { transform: scale(1.32); opacity: 0; }
+}
+@keyframes cs-breathe {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.04); }
+}
+@keyframes cs-fade-up {
+  from { opacity: 0; transform: translateY(16px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ─── Utility Layer ─── */
 @layer utilities {
   .text-balance {
     text-wrap: balance;
+  }
+  .cs-card-lift {
+    transition: box-shadow 0.28s, transform 0.28s;
+  }
+  .cs-card-lift:hover {
+    box-shadow: 0 20px 48px rgba(19, 29, 30, 0.12);
+    transform: translateY(-3px);
   }
 }

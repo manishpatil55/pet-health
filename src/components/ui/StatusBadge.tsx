@@ -1,14 +1,16 @@
-import type { VaccinationStatus } from '@/types';
+import type { VaccinationStatus, MedicationStatus, DewormingStatus } from '@/types';
+
+type AnyStatus = VaccinationStatus | MedicationStatus | DewormingStatus;
 
 interface StatusBadgeProps {
-  status: VaccinationStatus;
+  status: AnyStatus;
   size?: 'sm' | 'md';
   pulse?: boolean;
   className?: string;
 }
 
 const config: Record<
-  VaccinationStatus,
+  string,
   { label: string; bg: string; text: string }
 > = {
   completed: {
@@ -26,6 +28,21 @@ const config: Record<
     bg: 'bg-[#E76F51]/15',
     text: 'text-[#E76F51]',
   },
+  active: {
+    label: 'Active',
+    bg: 'bg-[#F2B544]/15',
+    text: 'text-[#F2B544]',
+  },
+  ongoing: {
+    label: 'Ongoing',
+    bg: 'bg-[#F2B544]/15',
+    text: 'text-[#F2B544]',
+  },
+  stopped: {
+    label: 'Stopped',
+    bg: 'bg-gray-100',
+    text: 'text-gray-500',
+  },
 };
 
 const sizeStyles = {
@@ -39,7 +56,8 @@ const StatusBadge = ({
   pulse = false,
   className = '',
 }: StatusBadgeProps) => {
-  const { label, bg, text } = config[status];
+  const s = (status || 'upcoming').toLowerCase();
+  const { label, bg, text } = config[s] || config.upcoming;
 
   return (
     <span
@@ -47,15 +65,15 @@ const StatusBadge = ({
         inline-flex items-center gap-1 rounded-full font-medium
         ${bg} ${text}
         ${sizeStyles[size]}
-        ${pulse && status === 'overdue' ? 'animate-pulse' : ''}
+        ${pulse && s === 'overdue' ? 'animate-pulse' : ''}
         ${className}
       `}
     >
       <span
         className={`h-1.5 w-1.5 rounded-full ${
-          status === 'completed'
+          s === 'completed'
             ? 'bg-[#6BCB77]'
-            : status === 'upcoming'
+            : s === 'upcoming' || s === 'active' || s === 'ongoing'
               ? 'bg-[#F2B544]'
               : 'bg-[#E76F51]'
         }`}
