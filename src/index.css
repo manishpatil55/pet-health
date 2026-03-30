@@ -52,11 +52,14 @@
 }
 
 /* ─── Base Styles ─── */
-*, *::before, *::after {
+*,
+*::before,
+*::after {
   box-sizing: border-box;
 }
 
 html {
+  font-size: 18px;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
@@ -80,13 +83,16 @@ body {
   width: 5px;
   height: 5px;
 }
+
 ::-webkit-scrollbar-track {
   background: var(--cs-surf-lo);
 }
+
 ::-webkit-scrollbar-thumb {
   background: var(--cs-primary-c);
   border-radius: 99px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
   background: var(--cs-primary);
 }
@@ -99,24 +105,61 @@ body {
 
 /* ─── Global Animations ─── */
 @keyframes cs-float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-8px); }
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(-8px);
+  }
 }
+
 @keyframes cs-shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
+  0% {
+    background-position: -200% 0;
+  }
+
+  100% {
+    background-position: 200% 0;
+  }
 }
+
 @keyframes cs-pulse-ring {
-  0% { transform: scale(1); opacity: 0.55; }
-  100% { transform: scale(1.32); opacity: 0; }
+  0% {
+    transform: scale(1);
+    opacity: 0.55;
+  }
+
+  100% {
+    transform: scale(1.32);
+    opacity: 0;
+  }
 }
+
 @keyframes cs-breathe {
-  0%, 100% { transform: scale(1); }
-  50% { transform: scale(1.04); }
+
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(1.04);
+  }
 }
+
 @keyframes cs-fade-up {
-  from { opacity: 0; transform: translateY(16px); }
-  to { opacity: 1; transform: translateY(0); }
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 /* ─── Utility Layer ─── */
@@ -124,9 +167,11 @@ body {
   .text-balance {
     text-wrap: balance;
   }
+
   .cs-card-lift {
     transition: box-shadow 0.28s, transform 0.28s;
   }
+
   .cs-card-lift:hover {
     box-shadow: 0 20px 48px rgba(19, 29, 30, 0.12);
     transform: translateY(-3px);
