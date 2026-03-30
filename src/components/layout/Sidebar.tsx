@@ -125,16 +125,14 @@ const Sidebar = () => {
 
   return (
     <motion.aside
-      initial={{ x: -20, opacity: 0 }}
+      className="fixed left-6 top-6 bottom-6 w-[220px] hidden lg:flex flex-col z-50 rounded-[32px] shadow-2xl overflow-hidden border border-white/40"
+      initial={{ x: -100, opacity: 0 }}
       animate={{ x: 0, opacity: 1 }}
-      transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-      className="hidden lg:flex lg:flex-col lg:w-[220px] lg:fixed lg:inset-y-0 z-20"
+      transition={{ type: 'spring', stiffness: 260, damping: 20 }}
       style={{
-        background: 'rgba(255, 255, 255, 0.45)',
-        backdropFilter: 'blur(32px) saturate(180%)',
-        WebkitBackdropFilter: 'blur(32px) saturate(180%)',
-        borderRight: '1px solid rgba(255, 255, 255, 0.3)',
-        boxShadow: '10px 0 40px rgba(19,29,30,0.02)',
+        background: 'rgba(255, 255, 255, 0.7)',
+        backdropFilter: 'blur(24px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(24px) saturate(180%)',
       }}
     >
       {/* ── Logo ── */}
@@ -162,20 +160,10 @@ const Sidebar = () => {
       </div>
 
       {/* ── Divider ── */}
-      <div className="mx-6 h-px bg-white/40" />
+      <div className="mx-6 h-px bg-black/5" />
 
       {/* ── Navigation ── */}
       <nav className="flex-1 px-3 py-6 space-y-1 overflow-y-auto custom-scrollbar">
-        {/* Section label */}
-        <div className="flex items-center gap-2 px-3 mb-4 opacity-50">
-          <div className="w-1 h-1 rounded-full bg-[#006a67]" />
-          <p
-            className="text-[10px] font-black uppercase tracking-[0.2em] text-[#6d7978]"
-            style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}
-          >
-            Navigation
-          </p>
-        </div>
 
         {mainNav.map((item) => (
           <NavItem
@@ -190,7 +178,7 @@ const Sidebar = () => {
           />
         ))}
 
-        {/* Health Tracking section */}
+        {/* Clinical Records section */}
         <div className="pt-8">
           <div className="flex items-center gap-2 px-3 mb-4 opacity-50">
             <div className="w-1 h-1 rounded-full bg-[#4fb6b2]" />

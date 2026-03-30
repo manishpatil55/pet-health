@@ -21,6 +21,7 @@ import { Avatar } from '@/components/ui/Avatar';
 import { SkeletonLoader } from '@/components/ui/SkeletonLoader';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { Select } from '@/components/ui/Select';
+import { Card } from '@/components/ui/Card';
 
 import { usePets } from '@/hooks/usePets';
 import { useVaccinations } from '@/hooks/useVaccinations';
@@ -83,21 +84,13 @@ function BC({
   style?: React.CSSProperties;
 }) {
   return (
-    <div
-      className={`rounded-3xl p-7 flex flex-col ${className}`}
-      style={{
-        background: dark ? C.primDk : 'rgba(255, 255, 255, 0.65)',
-        backdropFilter: dark ? 'none' : 'blur(20px)',
-        WebkitBackdropFilter: dark ? 'none' : 'blur(20px)',
-        boxShadow: dark
-          ? '0 8px 32px rgba(0,68,66,.22)'
-          : '0 8px 32px rgba(19,29,30,.04)',
-        border: dark ? '1px solid rgba(255,255,255,0.05)' : '1px solid rgba(255, 255, 255, 0.5)',
-        ...style,
-      }}
+    <Card
+      variant={dark ? 'dark' : 'glass'}
+      className={`p-7 flex flex-col ${className}`}
+      style={style}
     >
       {children}
-    </div>
+    </Card>
   );
 }
 
@@ -509,13 +502,9 @@ const Dashboard = () => {
         className="grid grid-cols-1 lg:grid-cols-12 gap-5 mb-5"
       >
         {/* Pet hero card */}
-        <div
-          className="lg:col-span-7 rounded-3xl p-8 flex flex-col sm:flex-row items-center sm:items-start gap-8 overflow-hidden relative group"
-          style={{
-            background: C.surf,
-            boxShadow: '0 2px 20px rgba(19,29,30,.06)',
-            border: '1px solid rgba(189,201,199,.22)',
-          }}
+        <Card
+          variant="glass"
+          className="lg:col-span-7 p-8 flex flex-col sm:flex-row items-center sm:items-start gap-8 relative overflow-hidden group"
         >
           {/* Decorative blob */}
           <div
@@ -525,8 +514,7 @@ const Dashboard = () => {
 
           {/* Pet photo */}
           <div
-            className="w-36 h-36 sm:w-44 sm:h-44 rounded-2xl overflow-hidden flex-shrink-0 shadow-lg"
-            style={{ boxShadow: '0 12px 32px rgba(0,106,103,.18)' }}
+            className="w-36 h-36 sm:w-44 sm:h-44 rounded-2xl overflow-hidden flex-shrink-0 shadow-lg border border-white/20"
           >
             {selectedPet?.photo ? (
               <img
@@ -605,7 +593,7 @@ const Dashboard = () => {
               )}
             </div>
           </div>
-        </div>
+        </Card>
 
         {/* Health score ring */}
         <BC className="lg:col-span-5 items-center justify-center text-center gap-5">

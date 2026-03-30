@@ -10,17 +10,22 @@ import { BottomNav } from './BottomNav';
 const AppLayout = () => {
   return (
     <div
-      className="min-h-screen"
+      className="min-h-screen relative overflow-x-hidden"
       style={{
-        background: '#f0fcfb',
+        backgroundColor: 'var(--cs-bg)',
         fontFamily: "'Plus Jakarta Sans', 'DM Sans', system-ui, -apple-system, sans-serif",
       }}
     >
+      {/* Premium Mesh Background */}
+      <div className="mesh-bg">
+        <div className="mesh-blob mesh-blob-1" />
+        <div className="mesh-blob mesh-blob-2" />
+      </div>
       {/* Desktop Sidebar */}
       <Sidebar />
 
       {/* Main Content */}
-      <main className="lg:ml-[220px] pb-24 lg:pb-0">
+      <main className="lg:ml-[240px] pb-24 lg:pb-0">
         <div className="p-4 md:p-6 lg:p-8 max-w-8xl mx-auto">
           <Outlet />
         </div>

@@ -30,6 +30,7 @@ import { SkeletonLoader } from '@/components/ui/SkeletonLoader';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { StatusBadge } from '@/components/ui/StatusBadge';
 import { EmptyState } from '@/components/ui/EmptyState';
+import { Card } from '@/components/ui/Card';
 
 import { usePet, useDeletePet } from '@/hooks/usePets';
 import { useVaccinations } from '@/hooks/useVaccinations';
@@ -112,20 +113,21 @@ function HealthRing({ score = 85 }: { score?: number }) {
 
 // ─── Bento card shell ─────────────────────────────────────────────────────────
 function BCard({
-  children, className = '', dark = false, style = {},
+  children,
+  className = '',
+  dark = false,
 }: {
-  children: React.ReactNode; className?: string; dark?: boolean; style?: React.CSSProperties;
+  children: React.ReactNode;
+  className?: string;
+  dark?: boolean;
 }) {
   return (
-    <div className={`rounded-3xl p-7 flex flex-col ${className}`}
-      style={{
-        background: dark ? C.primDk : C.surf,
-        boxShadow: dark ? '0 8px 32px rgba(0,68,66,.25)' : '0 2px 20px rgba(19,29,30,.06)',
-        border: dark ? 'none' : '1px solid rgba(189,201,199,.2)',
-        ...style,
-      }}>
+    <Card
+      variant={dark ? 'dark' : 'glass'}
+      className={`p-7 flex flex-col ${className}`}
+    >
       {children}
-    </div>
+    </Card>
   );
 }
 
