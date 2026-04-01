@@ -1,11 +1,11 @@
 /**
- * VaccinationTracker.tsx — Clinical Sanctuary · Production Edition
+ * VaccinationTracker.tsx — Production Edition
  *
- * User Journey:
- * 1. First visit (empty) → "Set up [Pet]'s vaccination schedule" → auto-generates from templates
- * 2. Day-to-day → See overdue alerts + upcoming schedule → mark complete when pet gets vaccinated
- * 3. Manual add → For vaccines not covered by auto-generation
- * 4. Templates → Power-user feature, accessible via settings gear icon
+ * How it works:
+ * 1. Templates = vaccine definitions (name, species, booster interval)
+ * 2. "Record Vaccination" → pick a template (pre-fills form) or add custom
+ * 3. Overdue/upcoming cards show what's actionable
+ * 4. Completed section is collapsible
  */
 
 import { useState } from 'react';
@@ -14,7 +14,7 @@ import { motion } from 'framer-motion';
 import type { Variants } from 'framer-motion';
 import {
   ArrowLeft, Plus, Syringe, Check, Trash2, ShieldCheck, AlertTriangle,
-  Clock, Settings2, Sparkles, CalendarCheck, ChevronDown, ChevronUp,
+  Clock, Settings2, CalendarCheck, ChevronDown, ChevronUp,
 } from 'lucide-react';
 
 import { Card } from '@/components/ui/Card';
@@ -28,7 +28,7 @@ import { VaccinationTemplatesModal } from '@/components/modals/VaccinationTempla
 import { usePet } from '@/hooks/usePets';
 import {
   useVaccinations,
-  useAutoGenerateVaccinations,
+  useVaccinationTemplates,
   useMarkVaccinationComplete,
   useDeleteVaccination,
 } from '@/hooks/useVaccinations';
@@ -45,12 +45,9 @@ const C = {
   primC: '#4fb6b2',
   green: '#6BCB77',
   red: '#E76F51',
-  bg: '#f0fcfb',
 } as const;
 
 const HEAD = 'Manrope, sans-serif';
-
-type Filter = 'all' | VaccinationStatus;
 
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 18 },
@@ -65,14 +62,12 @@ const statusMeta: Record<string, { icon: React.ElementType; color: string; bg: s
 };
 
 // ═══════════════════════════════════════════════════════════════════
-// Component
-// ═══════════════════════════════════════════════════════════════════
 
 const VaccinationTracker = () => {
   const { id: petId } = useParams<{ id: string }>();
   const navigate = useNavigate();
 
-  const [filter, setFilter] = useState<Filter>('all');
+  const [filter, setFilter] = useState<'all' | VaccinationStatus>('all');
   const [showAddModal, setShowAddModal] = useState(false);
   const [showTemplatesModal, setShowTemplatesModal] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
@@ -80,12 +75,18 @@ const VaccinationTracker = () => {
 
   const { data: petData } = usePet(petId!);
   const { data: vaccData, isLoading } = useVaccinations(petId!);
-  const autoGenerate = useAutoGenerateVaccinations();
+  const { data: templatesData } = useVaccinationTemplates();
   const markComplete = useMarkVaccinationComplete();
   const deleteVacc = useDeleteVaccination();
 
   const pet = petData?.data;
   const allVaccinations = vaccData?.data ?? [];
+  const allTemplates = templatesData?.data ?? [];
+
+  // Filter templates matching this pet's type
+  const matchingTemplates = pet?.type
+    ? allTemplates.filter((t) => t.petType.toLowerCase() === pet.type.toLowerCase())
+    : [];
 
   const overdue = allVaccinations.filter((v) => v.status === 'overdue');
   const upcoming = allVaccinations.filter((v) => v.status === 'upcoming');
@@ -95,7 +96,6 @@ const VaccinationTracker = () => {
   const actionable = filtered.filter((v) => v.status !== 'completed');
   const completedFiltered = filtered.filter((v) => v.status === 'completed');
 
-  // Sort: overdue first, then upcoming by date
   const sortedActionable = [...actionable].sort((a, b) => {
     const priority: Record<string, number> = { overdue: 0, upcoming: 1 };
     const diff = (priority[a.status] ?? 2) - (priority[b.status] ?? 2);
@@ -106,12 +106,10 @@ const VaccinationTracker = () => {
   const sortedCompleted = [...completedFiltered].sort((a, b) => {
     const dateA = a.dateAdministered ? new Date(a.dateAdministered).getTime() : 0;
     const dateB = b.dateAdministered ? new Date(b.dateAdministered).getTime() : 0;
-    return dateB - dateA; // Most recent first
+    return dateB - dateA;
   });
 
-
   const isEmpty = !isLoading && allVaccinations.length === 0;
-
 
   return (
     <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
@@ -138,25 +136,14 @@ const VaccinationTracker = () => {
         <div className="flex-1 min-w-[200px]">
           <h1
             className="font-black tracking-tight"
-            style={{
-              fontFamily: HEAD,
-              fontSize: 'clamp(1.5rem, 3vw, 2rem)',
-              color: C.onS,
-              letterSpacing: '-0.025em',
-              lineHeight: 1.1,
-            }}
+            style={{ fontFamily: HEAD, fontSize: 'clamp(1.5rem, 3vw, 2rem)', color: C.onS, letterSpacing: '-0.025em', lineHeight: 1.1 }}
           >
             Vaccinations
           </h1>
-          {pet && (
-            <p className="text-sm mt-0.5" style={{ color: C.out }}>
-              {pet.name}'s immunization record
-            </p>
-          )}
+          {pet && <p className="text-sm mt-0.5" style={{ color: C.out }}>{pet.name}'s immunization record</p>}
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
-          {/* Settings gear → opens template manager (power-user feature) */}
           <button
             onClick={() => setShowTemplatesModal(true)}
             className="w-9 h-9 rounded-xl flex items-center justify-center transition-all hover:bg-[#eaf6f5]"
@@ -165,13 +152,9 @@ const VaccinationTracker = () => {
           >
             <Settings2 className="h-4 w-4" />
           </button>
-
-          {/* Primary actions */}
-          {!isEmpty && (
-            <Button size="sm" pill className="gap-1.5" onClick={() => setShowAddModal(true)}>
-              <Plus className="h-3.5 w-3.5" /> Record Vaccination
-            </Button>
-          )}
+          <Button size="sm" pill className="gap-1.5" onClick={() => setShowAddModal(true)}>
+            <Plus className="h-3.5 w-3.5" /> Record Vaccination
+          </Button>
         </div>
       </motion.div>
 
@@ -182,14 +165,14 @@ const VaccinationTracker = () => {
         </div>
       )}
 
-      {/* ═══ Empty State — First-Time Setup ═══ */}
+      {/* ═══ Empty State ═══ */}
       {isEmpty && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
         >
-          <Card variant="glass" className="text-center py-16 px-8">
+          <Card variant="glass" className="text-center py-14 px-8">
             <div
               className="w-20 h-20 rounded-3xl flex items-center justify-center mx-auto mb-6"
               style={{ background: 'linear-gradient(135deg, #006a67, #4fb6b2)' }}
@@ -197,51 +180,61 @@ const VaccinationTracker = () => {
               <Syringe className="h-10 w-10 text-white" />
             </div>
 
-            <h2
-              className="text-2xl font-black mb-2"
-              style={{ fontFamily: HEAD, color: C.onS }}
-            >
-              Set up {pet?.name || 'your pet'}'s vaccinations
+            <h2 className="text-2xl font-black mb-2" style={{ fontFamily: HEAD, color: C.onS }}>
+              Record {pet?.name || 'your pet'}'s vaccinations
             </h2>
-
             <p className="text-sm max-w-md mx-auto mb-8" style={{ color: C.out }}>
-              We'll create a recommended vaccination schedule based on {pet?.name || 'your pet'}'s
-              breed and age. You can also add individual records manually.
+              Keep track of all immunizations. Pick from your vaccine templates for quick entry,
+              or add a custom record manually.
             </p>
 
+            {/* Show matching template suggestions */}
+            {matchingTemplates.length > 0 && (
+              <div className="mb-8">
+                <p className="text-[11px] font-bold uppercase tracking-widest mb-3" style={{ color: C.outV }}>
+                  Suggested for {pet?.type?.toLowerCase()}s
+                </p>
+                <div className="flex flex-wrap justify-center gap-2">
+                  {matchingTemplates.slice(0, 6).map((t) => (
+                    <button
+                      key={t._id}
+                      onClick={() => setShowAddModal(true)}
+                      className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-full text-xs font-bold transition-all hover:scale-105"
+                      style={{
+                        background: t.isCoreVaccine ? 'rgba(0,106,103,.06)' : 'rgba(79,182,178,.06)',
+                        color: t.isCoreVaccine ? C.prim : C.primC,
+                        border: `1px solid ${t.isCoreVaccine ? 'rgba(0,106,103,.15)' : 'rgba(79,182,178,.15)'}`,
+                        cursor: 'pointer',
+                      }}
+                    >
+                      <Syringe className="h-3 w-3" />
+                      {t.vaccineName}
+                      {t.isCoreVaccine && <span className="text-[8px] opacity-60">CORE</span>}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-              <Button
-                size="lg"
-                pill
-                className="gap-2"
-                onClick={() => autoGenerate.mutate(petId!)}
-                isLoading={autoGenerate.isPending}
-              >
-                <Sparkles className="h-4 w-4" />
-                Generate Recommended Schedule
-              </Button>
-              <Button
-                variant="secondary"
-                size="lg"
-                pill
-                className="gap-2"
-                onClick={() => setShowAddModal(true)}
-              >
-                <Plus className="h-4 w-4" />
-                Add Manually
+              <Button size="lg" pill className="gap-2" onClick={() => setShowAddModal(true)}>
+                <Plus className="h-4 w-4" /> Record Vaccination
               </Button>
             </div>
 
-            <p className="text-[11px] mt-6" style={{ color: C.outV }}>
-              The schedule is generated from vaccine templates.{' '}
-              <button
-                onClick={() => setShowTemplatesModal(true)}
-                className="underline hover:text-[#006a67] transition-colors"
-                style={{ color: C.primC, cursor: 'pointer' }}
-              >
-                Manage templates
-              </button>
-            </p>
+            {matchingTemplates.length === 0 && (
+              <p className="text-[11px] mt-6" style={{ color: C.outV }}>
+                No templates found for {pet?.type?.toLowerCase() || 'this pet type'}.{' '}
+                <button
+                  onClick={() => setShowTemplatesModal(true)}
+                  className="underline hover:text-[#006a67] transition-colors"
+                  style={{ color: C.primC, cursor: 'pointer' }}
+                >
+                  Create templates
+                </button>{' '}
+                for quick-fill when recording vaccinations.
+              </p>
+            )}
           </Card>
         </motion.div>
       )}
@@ -256,10 +249,7 @@ const VaccinationTracker = () => {
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.05 }}
               className="flex items-center gap-3 p-4 rounded-2xl mb-6"
-              style={{
-                background: 'rgba(231,111,81,.06)',
-                border: '1px solid rgba(231,111,81,.15)',
-              }}
+              style={{ background: 'rgba(231,111,81,.06)', border: '1px solid rgba(231,111,81,.15)' }}
             >
               <div className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(231,111,81,.12)' }}>
                 <AlertTriangle className="h-5 w-5" style={{ color: C.red }} />
@@ -275,7 +265,7 @@ const VaccinationTracker = () => {
             </motion.div>
           )}
 
-          {/* ── Summary Stats ── */}
+          {/* ── Summary Stats (clickable filters) ── */}
           <motion.div
             initial={{ opacity: 0, y: 14 }}
             animate={{ opacity: 1, y: 0 }}
@@ -287,7 +277,7 @@ const VaccinationTracker = () => {
               return (
                 <button
                   key={key}
-                  onClick={() => setFilter(filter === key ? 'all' : key as Filter)}
+                  onClick={() => setFilter(filter === key ? 'all' : key as VaccinationStatus)}
                   className="rounded-2xl p-4 text-center transition-all duration-200 hover:scale-[1.02]"
                   style={{
                     background: filter === key ? `${s.color}18` : s.bg,
@@ -346,21 +336,15 @@ const VaccinationTracker = () => {
 
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1">
-                            <h3 className="text-sm font-bold truncate" style={{ color: C.onS }}>
-                              {v.vaccineName}
-                            </h3>
+                            <h3 className="text-sm font-bold truncate" style={{ color: C.onS }}>{v.vaccineName}</h3>
                             <StatusBadge status={v.status} />
                           </div>
-
                           <p className="text-xs" style={{ color: C.out }}>
                             Due: {formatDate(v.nextDueDate)}
                             {v.status === 'upcoming' && ` · ${formatCountdown(v.nextDueDate)}`}
                             {v.status === 'overdue' && ' · Past due'}
                           </p>
-
-                          {v.notes && (
-                            <p className="text-xs mt-1 italic" style={{ color: C.outV }}>{v.notes}</p>
-                          )}
+                          {v.notes && <p className="text-xs mt-1 italic" style={{ color: C.outV }}>{v.notes}</p>}
                         </div>
 
                         <div className="flex gap-1.5 flex-shrink-0">
@@ -368,11 +352,7 @@ const VaccinationTracker = () => {
                             onClick={() => markComplete.mutate(v._id)}
                             disabled={markComplete.isPending}
                             className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all hover:scale-105"
-                            style={{
-                              background: 'rgba(107,203,119,.1)',
-                              color: C.green,
-                              cursor: 'pointer',
-                            }}
+                            style={{ background: 'rgba(107,203,119,.1)', color: C.green, cursor: 'pointer' }}
                             title="Mark as given"
                           >
                             <Check className="h-3.5 w-3.5" />
@@ -405,28 +385,20 @@ const VaccinationTracker = () => {
               >
                 <CalendarCheck className="h-4 w-4" />
                 Completed ({sortedCompleted.length})
-                {showCompleted
-                  ? <ChevronUp className="h-3.5 w-3.5" />
-                  : <ChevronDown className="h-3.5 w-3.5" />
-                }
+                {showCompleted ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
               </button>
 
               {showCompleted && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  className="space-y-2"
-                >
+                <motion.div initial={{ opacity: 0, height: 0 }} animate={{ opacity: 1, height: 'auto' }} className="space-y-2">
                   {sortedCompleted.map((v) => (
                     <div
                       key={v._id}
-                      className="flex items-center gap-3 p-3 rounded-xl transition-colors hover:bg-white/60"
+                      className="flex items-center gap-3 p-3 rounded-xl transition-colors hover:bg-white/60 group"
                       style={{ border: '1px solid rgba(189,201,199,.15)' }}
                     >
                       <div className="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0" style={{ background: 'rgba(107,203,119,.08)' }}>
                         <ShieldCheck className="h-4 w-4" style={{ color: C.green }} />
                       </div>
-
                       <div className="flex-1 min-w-0">
                         <p className="text-sm font-semibold truncate" style={{ color: C.onS }}>{v.vaccineName}</p>
                         <p className="text-[11px]" style={{ color: C.outV }}>
@@ -435,10 +407,9 @@ const VaccinationTracker = () => {
                           {v.clinicName && ` · ${v.clinicName}`}
                         </p>
                       </div>
-
                       <button
                         onClick={() => setDeleteTarget(v._id)}
-                        className="w-7 h-7 rounded-lg flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity"
+                        className="w-7 h-7 rounded-lg flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
                         style={{ cursor: 'pointer' }}
                         title="Remove record"
                       >
@@ -460,39 +431,6 @@ const VaccinationTracker = () => {
               </p>
             </div>
           )}
-
-          {/* ── Generate More CTA ── */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.3 }}
-            className="flex items-center justify-between p-4 rounded-2xl mt-8"
-            style={{ background: 'rgba(79,182,178,.04)', border: '1px solid rgba(79,182,178,.12)' }}
-          >
-            <div>
-              <p className="text-sm font-bold" style={{ color: C.onS }}>
-                Need more vaccines?
-              </p>
-              <p className="text-xs" style={{ color: C.out }}>
-                Auto-generate from templates or add a record manually.
-              </p>
-            </div>
-            <div className="flex gap-2">
-              <Button
-                variant="secondary"
-                size="sm"
-                pill
-                className="gap-1.5"
-                onClick={() => autoGenerate.mutate(petId!)}
-                isLoading={autoGenerate.isPending}
-              >
-                <Sparkles className="h-3.5 w-3.5" /> Generate
-              </Button>
-              <Button size="sm" pill className="gap-1.5" onClick={() => setShowAddModal(true)}>
-                <Plus className="h-3.5 w-3.5" /> Record
-              </Button>
-            </div>
-          </motion.div>
         </>
       )}
 
@@ -515,6 +453,7 @@ const VaccinationTracker = () => {
           open={showAddModal}
           onClose={() => setShowAddModal(false)}
           petId={petId}
+          petType={pet?.type}
         />
       )}
 

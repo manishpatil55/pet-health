@@ -23,29 +23,6 @@ export const useOverdueVaccinations = (petId: string) =>
     enabled: !!petId,
   });
 
-export const useAutoGenerateVaccinations = () => {
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (petId: string) => vaccinationsService.autoGenerate(petId),
-    onSuccess: (res, petId) => {
-      qc.invalidateQueries({ queryKey: ['vaccinations', petId] });
-      // Check if the backend actually generated specific new records
-      if (res.data && res.data.length > 0) {
-        toast.success(`Generated ${res.data.length} new vaccinations based on template!`);
-      } else {
-        // Sometimes backend returns 200 OK but 0 items because the pet already 
-        // has them or does not match any template requirements (age/species)
-        toast.success('Your pet is already up to date based on our templates.');
-      }
-    },
-    onError: (err: any) => {
-      const msg = err?.response?.data?.message || err?.message || 'Failed to generate schedule';
-      console.error('Auto-generate error:', err?.response?.data || err);
-      toast.error(msg);
-    },
-  });
-};
-
 export const useCreateVaccination = () => {
   const qc = useQueryClient();
   return useMutation({

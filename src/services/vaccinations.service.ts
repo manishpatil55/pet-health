@@ -37,13 +37,6 @@ export const vaccinationsService = {
     return res.data;
   },
 
-  autoGenerate: async (
-    petId: string,
-  ): Promise<{ success: boolean; data: Vaccination[] }> => {
-    const res = await api.post(`/vaccinations/pet/${petId}/auto-generate/`);
-    return res.data;
-  },
-
   update: async (
     id: string,
     data: Partial<Vaccination>,
