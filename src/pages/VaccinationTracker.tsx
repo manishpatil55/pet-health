@@ -6,7 +6,7 @@ import { useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import type { Variants } from 'framer-motion';
-import { ArrowLeft, Plus, Syringe, Zap, Check, Trash2, ShieldCheck, AlertTriangle, Clock } from 'lucide-react';
+import { ArrowLeft, Plus, Syringe, Zap, Check, Trash2, ShieldCheck, AlertTriangle, Clock, BookTemplate } from 'lucide-react';
 
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
@@ -15,6 +15,7 @@ import { SkeletonLoader } from '@/components/ui/SkeletonLoader';
 import { EmptyState } from '@/components/ui/EmptyState';
 import { ConfirmDialog } from '@/components/ui/ConfirmDialog';
 import { AddVaccinationModal } from '@/components/modals/AddVaccinationModal';
+import { VaccinationTemplatesModal } from '@/components/modals/VaccinationTemplatesModal';
 
 import { usePet } from '@/hooks/usePets';
 import {
@@ -50,6 +51,7 @@ const VaccinationTracker = () => {
   const navigate = useNavigate();
   const [filter, setFilter] = useState<Filter>('all');
   const [showAddModal, setShowAddModal] = useState(false);
+  const [showTemplatesModal, setShowTemplatesModal] = useState(false);
   const [deleteTarget, setDeleteTarget] = useState<string | null>(null);
 
   const { data: petData } = usePet(petId!);
@@ -123,6 +125,15 @@ const VaccinationTracker = () => {
           {pet && <p className="text-sm mt-0.5" style={{ color: '#6d7978' }}>{pet.name}'s immunization record</p>}
         </div>
         <div className="flex flex-wrap gap-2">
+          <Button
+            variant="ghost"
+            size="sm"
+            pill
+            className="gap-1.5"
+            onClick={() => setShowTemplatesModal(true)}
+          >
+            <BookTemplate className="h-3.5 w-3.5" /> Templates
+          </Button>
           <Button
             variant="secondary"
             size="sm"
@@ -295,6 +306,11 @@ const VaccinationTracker = () => {
           petId={petId}
         />
       )}
+
+      <VaccinationTemplatesModal
+        open={showTemplatesModal}
+        onClose={() => setShowTemplatesModal(false)}
+      />
     </div>
   );
 };

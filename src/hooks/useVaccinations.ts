@@ -92,3 +92,61 @@ export const useDeleteVaccination = () => {
     },
   });
 };
+
+// ─── Template Hooks ─────────────────────────────────────────────
+
+export const useVaccinationTemplates = () =>
+  useQuery({
+    queryKey: ['vaccination-templates'],
+    queryFn: () => vaccinationsService.getTemplates(),
+  });
+
+export const useCreateVaccinationTemplate = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (data: {
+      petType: string;
+      vaccineName: string;
+      isCoreVaccine: boolean;
+      recommendedAgeWeeks: number;
+      boosterIntervalWeeks: number;
+      description: string;
+    }) => vaccinationsService.createTemplate(data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['vaccination-templates'] });
+      toast.success('Template created');
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message || 'Failed to create template');
+    },
+  });
+};
+
+export const useUpdateVaccinationTemplate = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ id, data }: { id: string; data: Record<string, any> }) =>
+      vaccinationsService.updateTemplate(id, data),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['vaccination-templates'] });
+      toast.success('Template updated');
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message || 'Failed to update template');
+    },
+  });
+};
+
+export const useDeleteVaccinationTemplate = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => vaccinationsService.deleteTemplate(id),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['vaccination-templates'] });
+      toast.success('Template deleted');
+    },
+    onError: (err: any) => {
+      toast.error(err?.response?.data?.message || 'Failed to delete template');
+    },
+  });
+};

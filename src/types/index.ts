@@ -47,6 +47,19 @@ export interface Vaccination {
   status: VaccinationStatus;
 }
 
+export interface VaccinationTemplate {
+  _id: string;
+  petType: string;
+  vaccineName: string;
+  isCoreVaccine: boolean;
+  recommendedAgeWeeks: number;
+  boosterIntervalWeeks: number;
+  description: string;
+  createdBy?: string;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 // ─── Medication ─────────────────────────────────────────────
 
 export type MedicationFrequency = 'once-daily' | 'twice-daily' | 'three-times' | 'custom';
