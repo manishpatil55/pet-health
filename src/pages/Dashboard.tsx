@@ -67,7 +67,7 @@ const BODY = 'Plus Jakarta Sans, sans-serif';
 // ─── Framer variants ─────────────────────────────────────────────────────────
 const fadeUp: any = {
   hidden: { opacity: 0, y: 20 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.55, ease: [0.16, 1, 0.3, 1] } },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.55, ease: [0.16, 1, 0.3, 1] as const } },
 };
 const stagger: any = { hidden: {}, visible: { transition: { staggerChildren: 0.08 } } };
 
@@ -270,7 +270,7 @@ function MedBar({ med }: { med: any }) {
           style={{ background: SIG }}
           initial={{ width: 0 }}
           animate={{ width: `${pct}%` }}
-          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] as const }}
         />
       </div>
     </div>

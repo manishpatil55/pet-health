@@ -37,7 +37,7 @@ const IMG = {
 // ─── Animation Variants ───────────────────────────────────────────────────────
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 28 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.65, ease: [0.16, 1, 0.3, 1] } },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.65, ease: [0.16, 1, 0.3, 1] as const } },
 };
 const staggerContainer: Variants = {
   hidden: {},
@@ -355,7 +355,7 @@ function HeroSection() {
           <motion.div
             initial={{ opacity: 0, x: 40 }}
             animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.8, delay: 0.2, ease: [0.16, 1, 0.3, 1] as const }}
             className="relative hidden lg:block"
           >
             {/* Main image */}
@@ -416,7 +416,7 @@ function HeroSection() {
                   <motion.div
                     initial={{ width: 0 }}
                     animate={{ width: '94%' }}
-                    transition={{ duration: 1.2, delay: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                    transition={{ duration: 1.2, delay: 0.8, ease: [0.16, 1, 0.3, 1] as const }}
                     className="h-full rounded-full"
                     style={{ background: 'linear-gradient(135deg,#006a67,#4fb6b2)' }}
                   />
@@ -718,7 +718,7 @@ function FeaturesSection() {
                     style={{ background: b.color }}
                     initial={{ width: 0 }}
                     whileInView={{ width: `${b.val}%` }}
-                    transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] }}
+                    transition={{ duration: 1, ease: [0.16, 1, 0.3, 1] as const }}
                     viewport={{ once: true }}
                   />
                 </div>
@@ -952,7 +952,7 @@ function SanctuarySection() {
             initial={{ opacity: 0, x: -30 }}
             whileInView={{ opacity: 1, x: 0 }}
             viewport={VP}
-            transition={{ duration: 0.75, ease: [0.16, 1, 0.3, 1] }}
+            transition={{ duration: 0.75, ease: [0.16, 1, 0.3, 1] as const }}
           >
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-4">
@@ -1268,7 +1268,7 @@ function CTASection() {
           initial={{ opacity: 0, y: 32 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={VP}
-          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] as const }}
           className="rounded-[2rem] p-12 sm:p-16 lg:p-20 text-center relative overflow-hidden"
           style={{ background: 'linear-gradient(135deg,#006a67 0%,#4fb6b2 100%)' }}
         >

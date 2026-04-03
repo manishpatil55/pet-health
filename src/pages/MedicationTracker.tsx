@@ -27,7 +27,7 @@ const isActiveMed = (m: any) => {
 
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 18 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] as const } },
 };
 const stagger: Variants = { hidden: {}, visible: { transition: { staggerChildren: 0.07 } } };
 
@@ -73,7 +73,7 @@ const MedicationTracker = () => {
       <motion.div
         initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] as const }}
         className="flex items-center gap-4 mb-8"
       >
         <button
@@ -115,7 +115,7 @@ const MedicationTracker = () => {
         <motion.div
           initial={{ opacity: 0, y: 14 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.06, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 0.5, delay: 0.06, ease: [0.16, 1, 0.3, 1] as const }}
           className="grid grid-cols-2 gap-4 mb-8"
         >
           <div
@@ -242,7 +242,7 @@ const MedicationTracker = () => {
                             style={{ background: 'linear-gradient(90deg, #006a67, #4fb6b2)' }}
                             initial={{ width: 0 }}
                             animate={{ width: `${pct}%` }}
-                            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                            transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] as const }}
                           />
                         </div>
                         <p className="text-[11px] mt-1.5 text-right font-semibold" style={{ color: '#6d7978' }}>{Math.round(pct)}% complete</p>

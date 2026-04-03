@@ -51,7 +51,7 @@ const HEAD = 'Manrope, sans-serif';
 
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 18 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] as const } },
 };
 const stagger: Variants = { hidden: {}, visible: { transition: { staggerChildren: 0.07 } } };
 
@@ -117,7 +117,7 @@ const VaccinationTracker = () => {
       <motion.div
         initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] as const }}
         className="flex flex-wrap items-center gap-4 mb-8"
       >
         <button
@@ -170,7 +170,7 @@ const VaccinationTracker = () => {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] as const }}
         >
           <Card variant="glass" className="text-center py-14 px-8">
             <div

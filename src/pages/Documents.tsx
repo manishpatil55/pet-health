@@ -34,7 +34,7 @@ const mockDocuments: MockDocument[] = [
 
 const fadeUp: Variants = {
   hidden: { opacity: 0, y: 18 },
-  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] } },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.5, ease: [0.16, 1, 0.3, 1] as const } },
 };
 const stagger: Variants = { hidden: {}, visible: { transition: { staggerChildren: 0.06 } } };
 
@@ -58,7 +58,7 @@ const Documents = () => {
       <motion.div
         initial={{ opacity: 0, y: 14 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
+        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] as const }}
         className="flex items-center justify-between mb-8"
       >
         <div>
