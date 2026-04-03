@@ -1,12 +1,12 @@
 /**
- * PetList.tsx — Clinical Sanctuary redesign
+ * PetList.tsx — Clinical Sanctuary redesign (Premium Bento Aesthetic)
  * Drop-in replacement. All hooks/logic unchanged.
  */
 
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Plus, PawPrint, Search, ArrowRight, Dog, Cat, Rabbit } from 'lucide-react';
+import { Plus, PawPrint, Search, ArrowRight, Dog, Cat, Rabbit, Settings2, HeartPulse } from 'lucide-react';
 
 import { Avatar } from '@/components/ui/Avatar';
 import { SkeletonLoader } from '@/components/ui/SkeletonLoader';
@@ -36,6 +36,18 @@ const CS = {
 } as const;
 
 const sigGrad = 'linear-gradient(135deg, #006a67 0%, #4fb6b2 100%)';
+const HEAD = 'Manrope, sans-serif';
+const BODY = 'Plus Jakarta Sans, sans-serif';
+
+// ─── Framer variants ─────────────────────────────────────────────────────────
+const fadeUp = {
+  hidden: { opacity: 0, y: 24 },
+  visible: { opacity: 1, y: 0, transition: { duration: 0.6, ease: [0.16, 1, 0.3, 1] } },
+};
+const stagger = {
+  hidden: {},
+  visible: { transition: { staggerChildren: 0.08 } },
+};
 
 // ─── Filter types ─────────────────────────────────────────────────────────────
 type FilterType = 'All' | 'Dog' | 'Cat' | 'Other';
@@ -47,11 +59,9 @@ const FILTER_ICONS: Record<FilterType, React.ElementType> = {
   Other: Rabbit,
 };
 
-
 // ─── Pet Card ─────────────────────────────────────────────────────────────────
 function PetCard({
   pet,
-  index,
 }: {
   pet: {
     _id: string;
@@ -62,105 +72,99 @@ function PetCard({
     dateOfBirth: string;
     photo?: string;
   };
-  index: number;
 }) {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 18 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.45, delay: index * 0.07, ease: [0.16, 1, 0.3, 1] }}
-    >
-      <Link to={buildPath(ROUTES.PET_PROFILE, { id: pet._id })} className="block group">
+    <motion.div variants={fadeUp} className="h-full">
+      <Link to={buildPath(ROUTES.PET_PROFILE, { id: pet._id })} className="block h-full group outline-none">
         <div
-          className="relative rounded-3xl p-7 flex flex-col items-center text-center overflow-hidden transition-all duration-300"
+          className="relative h-full rounded-[2rem] p-7 flex flex-col items-center text-center overflow-hidden transition-all duration-500 bg-white"
           style={{
-            background: CS.surf0,
-            boxShadow: '0 4px 24px rgba(19,29,30,0.07)',
+            border: `1px solid rgba(189,201,199,.25)`,
+            boxShadow: '0 4px 24px rgba(0,0,0,.02)',
           }}
           onMouseEnter={e => {
-            (e.currentTarget as HTMLDivElement).style.boxShadow = '0 16px 48px rgba(0,106,103,0.14)';
-            (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-3px)';
+            (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(79,182,178,.3)'; // CS.primaryC with opacity
+            (e.currentTarget as HTMLDivElement).style.boxShadow = '0 24px 48px rgba(0,106,103,.08)';
+            (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-6px)';
           }}
           onMouseLeave={e => {
-            (e.currentTarget as HTMLDivElement).style.boxShadow = '0 4px 24px rgba(19,29,30,0.07)';
+            (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(189,201,199,.25)';
+            (e.currentTarget as HTMLDivElement).style.boxShadow = '0 4px 24px rgba(0,0,0,.02)';
             (e.currentTarget as HTMLDivElement).style.transform = 'translateY(0)';
           }}
         >
-          {/* Top accent bar */}
+          {/* Subtle top ambient glow */}
           <div
-            className="absolute top-0 left-0 right-0 h-1 rounded-t-3xl"
-            style={{ background: sigGrad }}
+            className="absolute top-0 left-0 right-0 h-32 opacity-30 transition-opacity duration-500 group-hover:opacity-60 pointer-events-none"
+            style={{ background: 'radial-gradient(circle at top, #eaf6f5 0%, transparent 70%)' }}
           />
 
-          {/* Avatar */}
-          <div className="relative mb-5 mt-2">
+          {/* Avatar Area */}
+          <div className="relative mb-6 z-10 mt-2">
             <div
-              className="w-24 h-24 rounded-full overflow-hidden p-0.5"
-              style={{
-                background: sigGrad,
-                boxShadow: '0 8px 24px rgba(0,106,103,0.2)',
-              }}
+              className="w-28 h-28 rounded-full overflow-hidden shadow-sm transition-all duration-500 group-hover:scale-105 group-hover:shadow-[0_8px_24px_rgba(0,106,103,.15)] bg-white p-1"
+              style={{ background: `linear-gradient(135deg, ${CS.surf0} 0%, ${CS.surfLo} 100%)` }}
             >
-              <div className="w-full h-full rounded-full overflow-hidden bg-white">
-                <Avatar src={pet.photo} name={pet.name} size="lg" className="w-full h-full" />
+              <div className="w-full h-full rounded-full overflow-hidden">
+                <Avatar src={pet.photo} name={pet.name} size="lg" className="w-full h-full object-cover" />
               </div>
             </div>
-            {/* Status dot */}
-            <div
-              className="absolute bottom-0.5 right-0.5 w-5 h-5 rounded-full border-2 border-white"
-              style={{ background: CS.secC }}
-              title="Healthy"
-            />
+
+            {/* Live Health Status Dot */}
+            <div className="absolute bottom-0 right-1 flex items-center justify-center">
+              <span className="absolute inline-flex h-full w-full rounded-full opacity-40 animate-ping" style={{ background: CS.secC }}></span>
+              <div
+                className="relative w-6 h-6 rounded-full border-[2.5px] border-white flex items-center justify-center shadow-sm"
+                style={{ background: CS.secC }}
+                title="Active Record"
+              />
+            </div>
           </div>
 
-          {/* Name + breed */}
-          <h3
-            className="text-lg font-black mb-0.5"
-            style={{ fontFamily: 'Manrope, sans-serif', color: CS.onSurf }}
-          >
-            {pet.name}
-          </h3>
-          <p
-            className="text-sm font-semibold mb-5"
-            style={{ color: CS.primary }}
-          >
-            {pet.breed}
-          </p>
+          {/* Clinical Badge */}
+          <div className="flex items-center gap-1 mb-2.5 z-10 opacity-0 transform translate-y-2 transition-all duration-500 group-hover:opacity-100 group-hover:translate-y-0">
+            <HeartPulse className="w-3.5 h-3.5" style={{ color: CS.primaryC }} />
+            <span className="text-[9px] font-bold uppercase tracking-widest" style={{ color: CS.primaryC }}>Active Patient</span>
+          </div>
 
-          {/* Stats row */}
-          <div
-            className="w-full flex items-center justify-center gap-5 mb-5 py-3 rounded-2xl"
-            style={{ background: CS.surfLo }}
-          >
-            <div className="text-center">
-              <p className="text-[9px] uppercase tracking-widest font-bold mb-0.5" style={{ color: CS.outline }}>
-                Type
-              </p>
-              <p className="text-xs font-bold" style={{ color: CS.onSurf }}>{pet.type}</p>
+          {/* Name & Breed */}
+          <div className="mb-5 z-10 w-full transition-transform duration-500 group-hover:-translate-y-1">
+            <h3
+              className="text-2xl font-black mb-1 truncate px-2"
+              style={{ fontFamily: HEAD, color: CS.onSurf, letterSpacing: '-0.02em' }}
+            >
+              {pet.name}
+            </h3>
+            <p className="text-sm font-semibold truncate px-4" style={{ color: CS.onSurfV }}>
+              {pet.breed}
+            </p>
+          </div>
+
+          {/* Bento Stats Row */}
+          <div className="flex w-full items-center justify-center gap-3 mb-6 z-10">
+            <div className="flex flex-col items-center px-3 py-2 rounded-xl" style={{ background: CS.surfLo }}>
+              <span className="text-[10px] font-bold uppercase tracking-wider mb-0.5" style={{ color: CS.outline }}>Type</span>
+              <span className="text-xs font-bold" style={{ color: CS.onSurf }}>{pet.type}</span>
             </div>
-            <div className="w-px h-6" style={{ background: CS.outlineV }} />
-            <div className="text-center">
-              <p className="text-[9px] uppercase tracking-widest font-bold mb-0.5" style={{ color: CS.outline }}>
-                Age
-              </p>
-              <p className="text-xs font-bold" style={{ color: CS.onSurf }}>{calculateAge(pet.dateOfBirth)}</p>
+            <div className="flex flex-col items-center px-3 py-2 rounded-xl" style={{ background: CS.surfLo }}>
+              <span className="text-[10px] font-bold uppercase tracking-wider mb-0.5" style={{ color: CS.outline }}>Age</span>
+              <span className="text-xs font-bold" style={{ color: CS.onSurf }}>{calculateAge(pet.dateOfBirth)}</span>
             </div>
-            <div className="w-px h-6" style={{ background: CS.outlineV }} />
-            <div className="text-center">
-              <p className="text-[9px] uppercase tracking-widest font-bold mb-0.5" style={{ color: CS.outline }}>
-                Sex
-              </p>
-              <p className="text-xs font-bold" style={{ color: CS.onSurf }}>{pet.gender}</p>
+            <div className="flex flex-col items-center px-3 py-2 rounded-xl" style={{ background: CS.surfLo }}>
+              <span className="text-[10px] font-bold uppercase tracking-wider mb-0.5" style={{ color: CS.outline }}>Sex</span>
+              <span className="text-xs font-bold" style={{ color: CS.onSurf }}>{pet.gender}</span>
             </div>
           </div>
 
           {/* View profile CTA */}
           <div
-            className="flex items-center gap-1.5 text-sm font-bold transition-all duration-200 group-hover:gap-2.5"
-            style={{ color: CS.primary }}
+            className="mt-auto w-full pt-5 flex items-center justify-between text-sm font-bold transition-all duration-300 z-10 relative overflow-hidden"
+            style={{ color: CS.primary, borderTop: `1px solid ${CS.surfDim}` }}
           >
-            View Profile
-            <ArrowRight className="h-4 w-4 transition-transform duration-200 group-hover:translate-x-1" />
+            <span>Open Profile</span>
+            <div className="w-8 h-8 rounded-full flex items-center justify-center transition-colors duration-300 group-hover:bg-[#eaf6f5]">
+              <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-0.5" />
+            </div>
           </div>
         </div>
       </Link>
@@ -168,45 +172,54 @@ function PetCard({
   );
 }
 
-// ─── Add New Pet card ─────────────────────────────────────────────────────────
+// ─── Add New Pet card (Redesigned) ────────────────────────────────────────────
 function AddPetCard() {
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 18 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.45, delay: 0.35, ease: [0.16, 1, 0.3, 1] }}
-    >
-      <Link to={ROUTES.ADD_PET} className="block group">
+    <motion.div variants={fadeUp} className="h-full">
+      <Link to={ROUTES.ADD_PET} className="block group h-full outline-none">
         <div
-          className="rounded-3xl p-7 flex flex-col items-center justify-center text-center h-full min-h-[280px] transition-all duration-300 cursor-pointer"
+          className="rounded-[2rem] p-7 flex flex-col items-center justify-center text-center h-full min-h-[340px] transition-all duration-500 cursor-pointer relative overflow-hidden"
           style={{
-            background: CS.surfLo,
-            border: `2px dashed rgba(0,106,103,0.25)`,
+            background: 'transparent',
+            border: `2px dashed rgba(189,201,199,.6)`, // Default dashed outline
             boxShadow: 'none',
           }}
           onMouseEnter={e => {
-            (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(0,106,103,0.5)';
-            (e.currentTarget as HTMLDivElement).style.background = CS.surfHi;
+            (e.currentTarget as HTMLDivElement).style.borderColor = CS.primaryC; // Brighten border
+            (e.currentTarget as HTMLDivElement).style.borderStyle = 'solid'; // Make solid
+            (e.currentTarget as HTMLDivElement).style.background = CS.surf0; // Solid white bg
+            (e.currentTarget as HTMLDivElement).style.boxShadow = '0 24px 48px rgba(0,106,103,.08)'; // Soft, elegant glow
+            (e.currentTarget as HTMLDivElement).style.transform = 'translateY(-6px)';
           }}
           onMouseLeave={e => {
-            (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(0,106,103,0.25)';
-            (e.currentTarget as HTMLDivElement).style.background = CS.surfLo;
+            (e.currentTarget as HTMLDivElement).style.borderColor = 'rgba(189,201,199,.6)';
+            (e.currentTarget as HTMLDivElement).style.borderStyle = 'dashed';
+            (e.currentTarget as HTMLDivElement).style.background = 'transparent';
+            (e.currentTarget as HTMLDivElement).style.boxShadow = 'none';
+            (e.currentTarget as HTMLDivElement).style.transform = 'translateY(0)';
           }}
         >
+          {/* Subtle elegant gradient overlay on hover (no heavy green block) */}
+          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
+            style={{ background: 'linear-gradient(135deg, rgba(255,255,255,0) 0%, rgba(234,246,245,0.5) 100%)' }}
+          />
+
+          {/* Icon Wrapper */}
           <div
-            className="w-16 h-16 rounded-full flex items-center justify-center mb-4 transition-transform duration-300 group-hover:scale-110"
-            style={{ background: CS.surf0, boxShadow: '0 4px 16px rgba(0,106,103,0.12)' }}
+            className="relative z-10 w-16 h-16 rounded-2xl flex items-center justify-center mb-6 transition-all duration-500 group-hover:scale-110 group-hover:rotate-90 group-hover:shadow-[0_8px_20px_rgba(0,106,103,.12)]"
+            style={{ background: CS.surfLo }}
           >
-            <Plus className="h-7 w-7" style={{ color: CS.primary }} />
+            <Plus className="h-7 w-7 transition-colors duration-500" style={{ color: CS.primary }} />
           </div>
+
           <h3
-            className="text-base font-black mb-1.5"
-            style={{ fontFamily: 'Manrope, sans-serif', color: CS.onSurf }}
+            className="relative z-10 text-xl font-black mb-2 transition-colors duration-500"
+            style={{ fontFamily: HEAD, color: CS.onSurf }}
           >
             Add New Pet
           </h3>
-          <p className="text-xs leading-relaxed max-w-[140px]" style={{ color: CS.onSurfV }}>
-            Grow your pet family in PawHealth
+          <p className="relative z-10 text-sm leading-relaxed max-w-[180px]" style={{ color: CS.onSurfV }}>
+            Register a new companion to your clinical sanctuary.
           </p>
         </div>
       </Link>
@@ -218,31 +231,33 @@ function AddPetCard() {
 function EmptyStateView({ onAction }: { onAction: () => void }) {
   return (
     <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      className="flex flex-col items-center justify-center py-32 text-center"
+      variants={fadeUp}
+      className="flex flex-col items-center justify-center py-24 text-center rounded-[2.5rem] mt-4 border border-dashed relative overflow-hidden"
+      style={{ borderColor: CS.outlineV, background: 'rgba(255,255,255,0.4)' }}
     >
-      <div
-        className="w-28 h-28 rounded-full flex items-center justify-center mb-8"
-        style={{ background: 'linear-gradient(135deg,#eaf6f5,#8ff3ef)' }}
+      <motion.div
+        className="w-24 h-24 rounded-[2rem] flex items-center justify-center mb-6 shadow-sm relative z-10"
+        style={{ background: CS.surfLo }}
+        animate={{ scale: [1, 1.03, 1], rotate: [0, -3, 3, 0] }}
+        transition={{ duration: 5, repeat: Infinity, ease: 'easeInOut' }}
       >
-        <PawPrint className="h-12 w-12" style={{ color: CS.primary }} />
-      </div>
+        <PawPrint className="h-10 w-10" style={{ color: CS.primaryC }} />
+      </motion.div>
       <h3
-        className="text-2xl font-black mb-3"
-        style={{ fontFamily: 'Manrope, sans-serif', color: CS.onSurf }}
+        className="text-2xl font-black mb-3 tracking-tight relative z-10"
+        style={{ fontFamily: HEAD, color: CS.onSurf }}
       >
         Your sanctuary is empty
       </h3>
-      <p className="text-base max-w-sm leading-relaxed mb-8" style={{ color: CS.onSurfV }}>
-        Add your first companion to begin tracking their clinical wellness in your private sanctuary.
+      <p className="text-base max-w-md leading-relaxed mb-8 relative z-10" style={{ color: CS.onSurfV }}>
+        Register your first companion to begin tracking their clinical wellness, vaccinations, and daily vitals.
       </p>
       <button
         onClick={onAction}
-        className="flex items-center gap-2 px-8 py-3.5 rounded-full font-bold text-sm text-white transition-all"
+        className="relative z-10 flex items-center gap-2 px-8 py-4 rounded-full font-bold text-sm text-white transition-all active:scale-95 hover:shadow-[0_12px_30px_rgba(0,106,103,.3)]"
         style={{
           background: sigGrad,
-          boxShadow: '0 8px 28px rgba(0,106,103,0.28)',
+          boxShadow: '0 8px 24px rgba(0,106,103,0.2)',
           border: 'none',
           cursor: 'pointer',
         }}
@@ -274,21 +289,21 @@ const PetList = () => {
   const filterTypes: FilterType[] = ['All', 'Dog', 'Cat', 'Other'];
 
   return (
-    <div style={{ fontFamily: 'Plus Jakarta Sans, sans-serif' }}>
-
+    <motion.div
+      initial="hidden"
+      animate="visible"
+      variants={stagger}
+      style={{ fontFamily: BODY }}
+      className="max-w-7xl mx-auto pb-10"
+    >
       {/* ── Page header ── */}
-      <motion.div
-        initial={{ opacity: 0, y: 16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: [0.16, 1, 0.3, 1] }}
-        className="flex flex-col sm:flex-row sm:items-end justify-between gap-5 mb-10"
-      >
+      <motion.div variants={fadeUp} className="flex flex-col sm:flex-row sm:items-center justify-between gap-6 mb-8">
         <div>
           <h1
             className="font-black tracking-tight mb-2"
             style={{
-              fontFamily: 'Manrope, sans-serif',
-              fontSize: 'clamp(2rem, 4vw, 3rem)',
+              fontFamily: HEAD,
+              fontSize: 'clamp(2rem, 4vw, 2.8rem)',
               color: CS.onSurf,
               letterSpacing: '-0.025em',
               lineHeight: 1.05,
@@ -296,65 +311,58 @@ const PetList = () => {
           >
             My Pets
           </h1>
-          <p className="text-base leading-relaxed max-w-md" style={{ color: CS.onSurfV }}>
+          <p className="text-base" style={{ color: CS.onSurfV }}>
             Manage your companions and monitor their clinical wellness.
           </p>
         </div>
 
         <Link to={ROUTES.ADD_PET}>
           <button
-            className="flex items-center gap-2 px-6 py-3 rounded-full font-bold text-sm text-white flex-shrink-0 transition-all active:scale-95"
+            className="flex items-center gap-2 px-7 py-3.5 rounded-full font-bold text-sm text-white transition-all active:scale-95 hover:shadow-[0_12px_30px_rgba(0,106,103,.3)]"
             style={{
               background: sigGrad,
               border: 'none',
               cursor: 'pointer',
-              boxShadow: '0 8px 24px rgba(0,106,103,0.25)',
+              boxShadow: '0 8px 24px rgba(0,106,103,0.2)',
             }}
           >
             <Plus className="h-4 w-4" />
-            Add Pet
+            Register Pet
           </button>
         </Link>
       </motion.div>
 
-      {/* ── Search + filter bar ── */}
+      {/* ── Bento-style Search & Filter bar ── */}
       <motion.div
-        initial={{ opacity: 0, y: 10 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.45, delay: 0.08 }}
-        className="flex flex-col sm:flex-row gap-3 mb-10 p-3 rounded-2xl"
-        style={{ background: CS.surfLo }}
+        variants={fadeUp}
+        className="flex flex-col md:flex-row items-center gap-4 mb-10 p-2 rounded-full transition-all"
+        style={{
+          background: CS.surf0,
+          border: `1px solid rgba(189,201,199,.4)`,
+          boxShadow: '0 4px 20px rgba(0,0,0,.02)'
+        }}
       >
         {/* Search input */}
-        <div className="relative flex-1">
-          <Search
-            className="absolute left-4 top-1/2 -translate-y-1/2 h-4 w-4"
-            style={{ color: CS.onSurfV }}
-          />
+        <div className="relative flex-1 w-full md:w-auto flex items-center">
+          <Search className="absolute left-5 h-4 w-4" style={{ color: CS.onSurfV }} />
           <input
             type="text"
-            placeholder="Search by name or breed…"
+            placeholder="Search patients by name or breed…"
             value={search}
             onChange={e => setSearch(e.target.value)}
-            className="w-full pl-11 pr-4 py-3 rounded-xl text-sm font-medium outline-none transition-all"
-            style={{
-              background: CS.surf0,
-              border: '1.5px solid transparent',
-              color: CS.onSurf,
-            }}
-            onFocus={e => {
-              e.target.style.borderColor = 'rgba(0,106,103,0.3)';
-              e.target.style.boxShadow = '0 0 0 3px rgba(0,106,103,0.08)';
-            }}
-            onBlur={e => {
-              e.target.style.borderColor = 'transparent';
-              e.target.style.boxShadow = 'none';
-            }}
+            className="w-full pl-12 pr-4 py-3 rounded-full text-sm font-medium outline-none bg-transparent"
+            style={{ color: CS.onSurf }}
           />
         </div>
 
+        {/* Divider (desktop only) */}
+        <div className="hidden md:block w-px h-8" style={{ background: CS.surfDim }} />
+
         {/* Filter chips */}
-        <div className="flex gap-2 flex-wrap">
+        <div className="flex gap-1.5 w-full md:w-auto overflow-x-auto pb-2 md:pb-0 px-2 md:px-0 hide-scrollbar">
+          <div className="flex items-center gap-1.5 mr-2 ml-1 opacity-50">
+            <Settings2 className="h-4 w-4" style={{ color: CS.onSurfV }} />
+          </div>
           {filterTypes.map(f => {
             const Icon = FILTER_ICONS[f];
             const active = filter === f;
@@ -362,13 +370,18 @@ const PetList = () => {
               <button
                 key={f}
                 onClick={() => setFilter(f)}
-                className="flex items-center gap-1.5 px-4 py-2.5 rounded-full text-xs font-bold transition-all"
+                className="flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-bold transition-all flex-shrink-0"
                 style={{
-                  background: active ? CS.primary : CS.surf0,
+                  background: active ? CS.primary : 'transparent',
                   color: active ? '#fff' : CS.onSurfV,
                   border: 'none',
                   cursor: 'pointer',
-                  boxShadow: active ? '0 4px 12px rgba(0,106,103,0.25)' : 'none',
+                }}
+                onMouseEnter={e => {
+                  if (!active) (e.currentTarget.style.background = CS.surfLo);
+                }}
+                onMouseLeave={e => {
+                  if (!active) (e.currentTarget.style.background = 'transparent');
                 }}
               >
                 <Icon className="h-3.5 w-3.5" />
@@ -379,7 +392,7 @@ const PetList = () => {
         </div>
       </motion.div>
 
-      {/* ── Content ── */}
+      {/* ── Grid Content ── */}
       {isLoading ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {[1, 2, 3, 4].map(i => <SkeletonLoader key={i} variant="card" />)}
@@ -388,27 +401,43 @@ const PetList = () => {
         <EmptyStateView onAction={() => navigate(ROUTES.ADD_PET)} />
       ) : (
         <AnimatePresence>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-            {filtered.map((pet, i) => (
-              <PetCard key={pet._id} pet={pet} index={i} />
+          <motion.div
+            variants={stagger}
+            initial="hidden"
+            animate="visible"
+            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 items-stretch"
+          >
+            {filtered.map((pet) => (
+              <PetCard key={pet._id} pet={pet} />
             ))}
             <AddPetCard />
-          </div>
+          </motion.div>
 
           {filtered.length === 0 && search && (
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="text-center py-20"
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              className="text-center py-24 rounded-[2rem] mt-8"
+              style={{ border: `1px dashed ${CS.outlineV}`, background: CS.surfLo }}
             >
-              <p className="text-base font-medium" style={{ color: CS.onSurfV }}>
-                No pets found for "{search}"
+              <Search className="h-10 w-10 mx-auto mb-4 opacity-50" style={{ color: CS.onSurfV }} />
+              <p className="text-lg font-bold" style={{ fontFamily: HEAD, color: CS.onSurf }}>
+                No records found
+              </p>
+              <p className="text-sm font-medium mt-1" style={{ color: CS.onSurfV }}>
+                We couldn't find any patients matching "{search}"
               </p>
             </motion.div>
           )}
         </AnimatePresence>
       )}
-    </div>
+
+      {/* CSS for hiding scrollbar on mobile filters */}
+      <style>{`
+        .hide-scrollbar::-webkit-scrollbar { display: none; }
+        .hide-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+      `}</style>
+    </motion.div>
   );
 };
 
